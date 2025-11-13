@@ -1,0 +1,161 @@
+.app {
+  min-height: 100vh;
+  background: #0a0a0a;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 16px 32px;
+  background: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.upload-button {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.7rem;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.upload-button:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading p {
+  margin-top: 16px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.error {
+  background: rgba(255, 69, 58, 0.05);
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 500px;
+  margin: 100px auto;
+  text-align: center;
+  border: 1px solid rgba(255, 69, 58, 0.2);
+}
+
+.error h2 {
+  color: #ff453a;
+  margin-bottom: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.error p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 12px 16px;
+  }
+
+  .header h1 {
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+  }
+
+  .upload-button {
+    padding: 6px 12px;
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .app {
+    min-height: 100vh;
+  }
+
+  .header {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .header h1 {
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+  }
+
+  .upload-button {
+    padding: 5px 10px;
+    font-size: 0.6rem;
+    border-radius: 4px;
+  }
+
+  .loading {
+    height: 100vh;
+  }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+  }
+
+  .loading p {
+    font-size: 0.7rem;
+  }
+
+  .error {
+    margin: 40px 16px;
+    padding: 16px;
+  }
+
+  .error h2 {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+
+  .error p {
+    font-size: 0.75rem;
+  }
+}

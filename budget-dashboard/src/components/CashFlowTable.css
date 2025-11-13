@@ -1,0 +1,133 @@
+.cashflow-table-container {
+  width: 100%;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cashflow-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+  font-size: 0.8rem;
+}
+
+.cashflow-table thead {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cashflow-table th {
+  padding: 16px 14px;
+  text-align: left;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 1.2px;
+  white-space: nowrap;
+}
+
+.cashflow-table td {
+  padding: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Inter', sans-serif;
+}
+
+.cashflow-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.cashflow-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cashflow-table tr.upcoming-row {
+  background: rgba(0, 255, 136, 0.03);
+  border-left: 2px solid #00ff88;
+}
+
+.cashflow-table tr.today-row {
+  background: rgba(0, 217, 255, 0.05);
+  border-left: 2px solid #00d9ff;
+}
+
+.date-cell {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+}
+
+.income {
+  color: #00ff88;
+  font-weight: 600;
+}
+
+.expense {
+  color: #ff453a;
+  font-weight: 500;
+}
+
+.expense.highlighted {
+  background-color: rgba(255, 159, 10, 0.05);
+  font-weight: 600;
+}
+
+.notes-cell {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.4);
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.balance-col {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.balance-col.positive {
+  color: #00ff88;
+}
+
+.balance-col.negative {
+  color: #ff453a;
+}
+
+.toggle-button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.7rem;
+}
+
+.toggle-button:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 768px) {
+  .cashflow-table {
+    font-size: 0.75rem;
+  }
+
+  .cashflow-table th,
+  .cashflow-table td {
+    padding: 10px 8px;
+  }
+}

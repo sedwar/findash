@@ -1,0 +1,94 @@
+.upcoming-payments {
+  width: 100%;
+}
+
+.no-payments {
+  text-align: center;
+  padding: 40px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.9rem;
+}
+
+.payments-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.payment-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.payment-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.payment-item.income {
+  border-left: 2px solid #00ff88;
+}
+
+.payment-item.expense {
+  border-left: 2px solid #ff453a;
+}
+
+.payment-icon {
+  font-size: 1.4rem;
+  opacity: 0.6;
+}
+
+.payment-details {
+  flex: 1;
+}
+
+.payment-type {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  margin-bottom: 4px;
+  letter-spacing: 0.3px;
+}
+
+.payment-date {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.payment-amount {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+}
+
+.payment-amount.positive {
+  color: #00ff88;
+}
+
+.payment-amount.negative {
+  color: #ff453a;
+}
+
+@media (max-width: 768px) {
+  .payment-item {
+    padding: 14px;
+  }
+
+  .payment-icon {
+    font-size: 1.2rem;
+  }
+
+  .payment-amount {
+    font-size: 1rem;
+  }
+}

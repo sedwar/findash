@@ -1,0 +1,256 @@
+.dashboard {
+  max-width: 1600px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 5;
+}
+
+.charts-section {
+  padding: 0 48px 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+  gap: 24px;
+}
+
+.chart-container {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 32px;
+  transition: all 0.3s ease;
+}
+
+.chart-container:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.chart-container.full-width {
+  grid-column: 1 / -1;
+}
+
+.charts-section-compact {
+  padding: 0 48px 40px;
+  width: 100%;
+}
+
+.chart-container-small {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 32px;
+  transition: all 0.3s ease;
+  cursor: default;
+  pointer-events: none;
+}
+
+.chart-fullscreen-modal {
+  display: none;
+}
+
+.chart-fullscreen-modal::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 255, 136, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(0, 217, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 69, 255, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.chart-container-small h2 {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+  font-weight: 700;
+}
+
+.chart-wrapper {
+  height: 500px;
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-container h2 {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+}
+
+.transactions-section {
+  padding: 0 48px 80px;
+}
+
+.transactions-section > div {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 32px;
+}
+
+.transactions-section h2 {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .charts-section {
+    grid-template-columns: 1fr;
+    padding: 0 24px 40px;
+  }
+  
+  .transactions-section {
+    padding: 0 24px 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    max-width: 100%;
+  }
+
+  .charts-section {
+    padding: 0 12px 12px;
+    gap: 12px;
+  }
+  
+  .chart-container {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .chart-container h2 {
+    font-size: 0.65rem;
+    margin-bottom: 8px;
+  }
+
+  .transactions-section {
+    padding: 0 12px 24px;
+  }
+
+  .transactions-section > div {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    max-width: 100%;
+    display: block;
+    position: relative;
+  }
+
+  .charts-section {
+    padding: 0 12px 12px;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    display: block;
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .charts-section-compact {
+    padding: 0 12px 12px;
+    display: block;
+    position: relative;
+    margin-bottom: 16px;
+  }
+  
+  .chart-container {
+    padding: 12px;
+    border-radius: 8px;
+    display: block;
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  .chart-container-small {
+    padding: 12px;
+    cursor: pointer;
+    display: block;
+    position: relative;
+    margin-bottom: 12px;
+    pointer-events: auto !important;
+  }
+
+  .chart-container-small:active {
+    background: rgba(138, 43, 226, 0.08);
+    border-color: rgba(138, 43, 226, 0.5);
+  }
+
+  .chart-fullscreen-modal {
+    display: flex !important;
+  }
+
+  .chart-container-small h2 {
+    font-size: 0.65rem;
+    margin-bottom: 8px;
+  }
+
+  .chart-wrapper {
+    height: 450px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  .chart-container-small {
+    overflow: visible !important;
+    margin-bottom: 50px !important;
+    padding-bottom: 0 !important;
+    min-height: 520px !important;
+  }
+
+  .chart-container-small h2::after {
+    content: ' 📱 (Tap to expand)';
+    font-size: 0.6rem;
+    opacity: 0.7;
+  }
+
+  /* Force vertical stacking */
+  .account-summary-new {
+    margin-bottom: 12px !important;
+  }
+
+  .charts-section-compact {
+    margin-bottom: 8px !important;
+    clear: both;
+    padding-bottom: 0 !important;
+  }
+
+  .charts-section {
+    margin-bottom: 20px !important;
+    clear: both;
+    padding-top: 0 !important;
+  }
+
+  .transactions-section {
+    padding: 0 12px 16px;
+    display: block;
+    position: relative;
+    clear: both;
+    margin-top: 20px !important;
+  }
+
+  .transactions-section > div {
+    padding: 12px;
+  }
+}
