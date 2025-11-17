@@ -99,7 +99,8 @@ function BalanceChart({ rows, defaultZoom = 1 }: BalanceChartProps) {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(value);
   };
 
@@ -336,7 +337,14 @@ function BalanceChart({ rows, defaultZoom = 1 }: BalanceChartProps) {
             }}
             activeDot={{ r: 6 }}
           />
-          <Line type="monotone" dataKey="BofA" stroke="#ff453a" strokeWidth={2} dot={false} />
+          <Line 
+            type="monotone" 
+            dataKey="BofA" 
+            stroke="#ff453a" 
+            strokeWidth={2} 
+            dot={false}
+            activeDot={{ r: 6 }}
+          />
           <Line 
             type="monotone" 
             dataKey="BofA 2" 
@@ -350,8 +358,16 @@ function BalanceChart({ rows, defaultZoom = 1 }: BalanceChartProps) {
               }
               return null;
             }}
+            activeDot={{ r: 6 }}
           />
-          <Line type="monotone" dataKey="Chase" stroke="#ff9f0a" strokeWidth={2} dot={false} />
+          <Line 
+            type="monotone" 
+            dataKey="Chase" 
+            stroke="#ff9f0a" 
+            strokeWidth={2} 
+            dot={false}
+            activeDot={{ r: 6 }}
+          />
         </LineChart>
       </ResponsiveContainer>
       </div>

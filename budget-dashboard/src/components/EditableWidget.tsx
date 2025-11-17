@@ -11,9 +11,11 @@ interface EditableWidgetProps {
   sublabel?: string;
   showNoPending?: boolean;
   onPendingEdit?: (value: number) => void;
+  onPayFull?: (fullAmount: number) => void;
+  isWarning?: boolean;
 }
 
-function EditableWidget({ label, value, onSave, color = '#ffffff', size = 'medium', pending, sublabel, showNoPending, onPendingEdit }: EditableWidgetProps) {
+function EditableWidget({ label, value, onSave, color = '#ffffff', size = 'medium', pending, sublabel, showNoPending, onPendingEdit, onPayFull, isWarning }: EditableWidgetProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value.toString());
   const [isEditingPending, setIsEditingPending] = useState(false);
@@ -30,7 +32,8 @@ function EditableWidget({ label, value, onSave, color = '#ffffff', size = 'mediu
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount);
   };
 
@@ -71,7 +74,7 @@ function EditableWidget({ label, value, onSave, color = '#ffffff', size = 'mediu
   };
 
   return (
-    <div className={`editable-widget editable-widget--${size}`} style={{ '--widget-color': color } as any}>
+    <div className={`editable-widget editable-widget--${size}`} style={{ '--widget-color': isWarning ? '#ff3b30' : color } as any}>
       <div className="widget-label">
         {label}
         {sublabel && (
@@ -139,6 +142,45 @@ function EditableWidget({ label, value, onSave, color = '#ffffff', size = 'mediu
       {!isEditing && showNoPending && (
         <div className="widget-no-pending">
           ✓ No Pending
+        </div>
+      )}
+      
+      {!isEditing && onPayFull && (
+        <button
+          onClick={() => onPayFull(value + (pending || 0))}
+          style={{
+            marginTop: '8px',
+            padding: '6px 12px',
+            background: 'rgba(255, 255, 255, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '6px',
+            color: 'rgba(255, 255, 255, 0.8)',
+            fontSize: '0.75rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(0, 255, 136, 0.2)';
+            e.currentTarget.style.borderColor = 'rgba(0, 255, 136, 0.5)';
+            e.currentTarget.style.color = '#00ff88';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)';
+          }}
+          title={`Pay full balance: ${formatCurrency(value + (pending || 0))}`}
+        >
+          💰 Pay Full
+        </button>
+      )}
+      
+      {!isEditing && isWarning && (
+        <div className="widget-warning-message">
+          ⚠️ Will go negative
         </div>
       )}
       

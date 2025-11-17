@@ -82,7 +82,7 @@ function CashFlowTable({ rows }: CashFlowTableProps) {
                 <td className="expense highlighted">{formatCurrency(row.bofaPayment)}</td>
                 <td className="expense highlighted">{formatCurrency(row.bofa2Payment)}</td>
                 <td className="expense highlighted">{formatCurrency(row.chasePayment)}</td>
-                <td>{formatCurrency(row.checking)}</td>
+                <td className={row.checking < 0 ? 'negative' : ''}>{formatCurrency(row.checking)}</td>
                 <td>{formatCurrency(row.bofa)}</td>
                 <td>{formatCurrency(row.bofa2)}</td>
                 <td>{formatCurrency(row.chase)}</td>

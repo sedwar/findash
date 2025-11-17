@@ -10,6 +10,11 @@ export interface ProjectionRules {
   bofa2Balance: number;
   chaseBalance: number;
   
+  // Pending charges (will post in first few days)
+  pendingBofA?: number;
+  pendingBofA2?: number;
+  pendingChase?: number;
+  
   // Statement balances (what cards will be after pending hits)
   bofaStatement: number;
   bofa2Statement: number;
@@ -29,6 +34,7 @@ export interface ProjectionRules {
   // Rules
   rentDay: number; // Day of month rent is due (23)
   payDayReference: Date; // A known payday (Nov 20, 2025)
+  startDate?: Date; // Optional: start date for projection (defaults to today)
   
   // Interest rates (APR)
   chaseAPR?: number; // Chase started accruing interest Nov 6
@@ -50,9 +56,141 @@ export interface ProjectionRow {
   notes: string;
 }
 
+export function generateMinimumPaymentProjection(rules: ProjectionRules, maxMonths: number = 12): ProjectionRow[] {
+  const rows: ProjectionRow[] = [];
+  const today = rules.startDate ? new Date(rules.startDate) : new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Running balances
+  let checking = rules.checkingBalance;
+  let bofa = rules.bofaBalance;
+  let bofa2 = rules.bofa2Balance;
+  let chase = rules.chaseBalance;
+  
+  // Track if pending charges have posted
+  let pendingPosted = false;
+  
+  // Calculate next payday
+  const nextPayday = getNextPayday(today, rules.payDayReference);
+  
+  // Track last spending day
+  let lastSpendingDay = new Date(today);
+  lastSpendingDay.setDate(lastSpendingDay.getDate() - 7);
+  
+  // Project up to maxMonths or until checking goes negative
+  const endDate = new Date(today);
+  endDate.setMonth(endDate.getMonth() + maxMonths);
+  
+  for (let current = new Date(today); current <= endDate; current.setDate(current.getDate() + 1)) {
+    const dayOfWeek = current.getDay();
+    const dayOfMonth = current.getDate();
+    
+    let paycheckToday = 0;
+    let spendingToday = 0;
+    let rentToday = 0;
+    let bofaPayment = 0;
+    let bofa2Payment = 0;
+    let chasePayment = 0;
+    let notes = '';
+    
+    // Post pending charges on day 1-2
+    if (!pendingPosted && dayOfMonth <= 2) {
+      if (rules.pendingBofA) {
+        bofa += rules.pendingBofA;
+        notes = notes ? notes + ', Pending BofA' : 'Pending BofA';
+      }
+      if (rules.pendingBofA2) {
+        bofa2 += rules.pendingBofA2;
+        notes = notes ? notes + ', Pending BofA2' : 'Pending BofA2';
+      }
+      if (rules.pendingChase) {
+        chase += rules.pendingChase;
+        notes = notes ? notes + ', Pending Chase' : 'Pending Chase';
+      }
+      if (rules.pendingBofA || rules.pendingBofA2 || rules.pendingChase) {
+        pendingPosted = true;
+      }
+    }
+    
+    // Payday
+    if (isPayday(current, rules.payDayReference)) {
+      paycheckToday = rules.paycheckAmount;
+      checking += paycheckToday;
+      notes = notes ? notes + ', Payday' : 'Payday';
+    }
+    
+    // Minimum payments on 4th of month (pay statement balance)
+    const paymentDayOfMonth = rules.paymentDay || 4;
+    if (dayOfMonth === paymentDayOfMonth) {
+      // Pay statement balances (minimum payments)
+      if (rules.bofaStatement && rules.bofaStatement > 0 && bofa > 0) {
+        bofaPayment = Math.min(rules.bofaStatement, bofa);
+        checking -= bofaPayment;
+        bofa -= bofaPayment;
+      }
+      
+      if (rules.bofa2Statement && rules.bofa2Statement > 0 && bofa2 > 0) {
+        bofa2Payment = Math.min(rules.bofa2Statement, bofa2);
+        checking -= bofa2Payment;
+        bofa2 -= bofa2Payment;
+      }
+      
+      if (rules.chaseStatement && rules.chaseStatement > 0 && chase > 0) {
+        chasePayment = Math.min(rules.chaseStatement, chase);
+        checking -= chasePayment;
+        chase -= chasePayment;
+      }
+      
+      if (bofaPayment > 0 || bofa2Payment > 0 || chasePayment > 0) {
+        notes = notes ? notes + ', Min Payments' : 'Min Payments';
+      }
+    }
+    
+    // Spending on Thursdays
+    if (dayOfWeek === 4) {
+      const daysSinceLastSpending = Math.floor((current.getTime() - lastSpendingDay.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSinceLastSpending >= 7) {
+        spendingToday = rules.weeklySpending;
+        bofa2 += spendingToday;
+        lastSpendingDay = new Date(current);
+      }
+    }
+    
+    // Rent on rentDay
+    if (dayOfMonth === rules.rentDay) {
+      rentToday = rules.rent;
+      checking -= rentToday;
+      notes = notes ? notes + ', Rent' : 'Rent';
+    }
+    
+    rows.push({
+      date: formatDate(current),
+      paycheck: paycheckToday,
+      spending: spendingToday,
+      rent: rentToday,
+      bofaPayment,
+      bofa2Payment,
+      chasePayment,
+      checking,
+      bofa,
+      bofa2,
+      chase,
+      notes
+    });
+    
+    // Stop if checking goes negative
+    if (checking < 0) {
+      notes = notes ? notes + ' ⚠️ STOPPED - Negative Cash' : '⚠️ STOPPED - Negative Cash';
+      break;
+    }
+  }
+  
+  return rows;
+}
+
 export function generateProjection(rules: ProjectionRules, months: number = 4): ProjectionRow[] {
   const rows: ProjectionRow[] = [];
-  const today = new Date();
+  const today = rules.startDate ? new Date(rules.startDate) : new Date();
   today.setHours(0, 0, 0, 0);
   
   // Calculate projection end date
@@ -64,6 +202,9 @@ export function generateProjection(rules: ProjectionRules, months: number = 4): 
   let bofa = rules.bofaBalance;
   let bofa2 = rules.bofa2Balance;
   let chase = rules.chaseBalance;
+  
+  // Track if pending charges have posted
+  let pendingPosted = false;
   
   // Calculate next payday
   const nextPayday = getNextPayday(today, rules.payDayReference);
@@ -85,6 +226,25 @@ export function generateProjection(rules: ProjectionRules, months: number = 4): 
     let chasePayment = 0;
     let notes = '';
     
+    // Post pending charges on day 1-2 of the projection (they post within 1-2 days)
+    if (!pendingPosted && dayOfMonth <= 2) {
+      if (rules.pendingBofA) {
+        bofa += rules.pendingBofA;
+        notes = notes ? notes + ', Pending BofA' : 'Pending BofA';
+      }
+      if (rules.pendingBofA2) {
+        bofa2 += rules.pendingBofA2;
+        notes = notes ? notes + ', Pending BofA2' : 'Pending BofA2';
+      }
+      if (rules.pendingChase) {
+        chase += rules.pendingChase;
+        notes = notes ? notes + ', Pending Chase' : 'Pending Chase';
+      }
+      if (rules.pendingBofA || rules.pendingBofA2 || rules.pendingChase) {
+        pendingPosted = true;
+      }
+    }
+    
     // Check if it's a payday (every other Thursday)
     if (isPayday(current, rules.payDayReference)) {
       paycheckToday = rules.paycheckAmount;
@@ -93,37 +253,33 @@ export function generateProjection(rules: ProjectionRules, months: number = 4): 
     }
     
     // Make credit card payments monthly (default: 4th of month)
-    // SMART LOGIC: Only pay if checking has enough buffer (keep at least $100)
+    // Pay the full requested amounts - allow checking to go negative to show cash flow reality
     const paymentDayOfMonth = rules.paymentDay || 4;
     if (dayOfMonth === paymentDayOfMonth) {
-      const minCheckingBuffer = 100; // Keep at least $100 in checking
-      let availableForPayments = Math.max(0, checking - minCheckingBuffer);
-      
-      // Pay cards in priority order: Chase (has interest) > BofA > BofA2
-      if (rules.chasePaymentAmount && rules.chasePaymentAmount > 0 && chase > 0 && availableForPayments > 0) {
-        chasePayment = Math.min(rules.chasePaymentAmount, chase, availableForPayments);
+      // Calculate payments needed (up to balance and amount specified)
+      if (rules.chasePaymentAmount && rules.chasePaymentAmount > 0 && chase > 0) {
+        chasePayment = Math.min(rules.chasePaymentAmount, chase);
         checking -= chasePayment;
         chase -= chasePayment;
-        availableForPayments -= chasePayment;
       }
       
-      if (rules.bofaPaymentAmount && rules.bofaPaymentAmount > 0 && bofa > 0 && availableForPayments > 0) {
-        bofaPayment = Math.min(rules.bofaPaymentAmount, bofa, availableForPayments);
+      if (rules.bofaPaymentAmount && rules.bofaPaymentAmount > 0 && bofa > 0) {
+        bofaPayment = Math.min(rules.bofaPaymentAmount, bofa);
         checking -= bofaPayment;
         bofa -= bofaPayment;
-        availableForPayments -= bofaPayment;
       }
       
-      if (rules.bofa2PaymentAmount && rules.bofa2PaymentAmount > 0 && bofa2 > 0 && availableForPayments > 0) {
-        bofa2Payment = Math.min(rules.bofa2PaymentAmount, bofa2, availableForPayments);
+      if (rules.bofa2PaymentAmount && rules.bofa2PaymentAmount > 0 && bofa2 > 0) {
+        bofa2Payment = Math.min(rules.bofa2PaymentAmount, bofa2);
         checking -= bofa2Payment;
         bofa2 -= bofa2Payment;
       }
       
-      if (bofaPayment > 0 || bofa2Payment > 0 || chasePayment > 0) {
+      if (chasePayment > 0 || bofaPayment > 0 || bofa2Payment > 0) {
         notes = notes ? notes + ', CC Payments' : 'CC Payments';
-      } else if (checking < minCheckingBuffer + 100) {
-        notes = notes ? notes + ', Low Cash - Skipped Payments' : 'Low Cash - Skipped Payments';
+        if (checking < 0) {
+          notes = notes + ' ⚠️ NEGATIVE';
+        }
       }
     }
     

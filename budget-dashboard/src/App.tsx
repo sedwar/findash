@@ -40,6 +40,7 @@ function App() {
 
   const loadExcelFile = async () => {
     try {
+      console.log('📂 Loading budget.xlsx...');
       const response = await fetch('/budget.xlsx');
       const arrayBuffer = await response.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -48,13 +49,16 @@ function App() {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
       
+      console.log('🔄 Processing Excel data...');
       const processedData = processFinancialData(jsonData);
+      console.log('✅ Excel data loaded successfully!');
+      console.log('📊 Summary:', processedData.summary);
       setFinancialData(processedData);
       setLoading(false);
     } catch (err) {
       setError('Failed to load financial data');
       setLoading(false);
-      console.error(err);
+      console.error('❌ Error loading Excel:', err);
     }
   };
 
@@ -78,6 +82,9 @@ function App() {
     let chaseStatement = 0;
     let bofaStatement = 0;
     let bofa2Statement = 0;
+    let pendingChaseCharges = 0;
+    let pendingBofACharges = 0;
+    let pendingBofA2Charges = 0;
     
     const today = new Date();
 
@@ -132,27 +139,62 @@ function App() {
 
       // Get TODAY's balances from first row (index 0 is today - 13-Nov)
       if (index === 0) {
-        // Row 0 has "Total" label and CURRENT STATEMENT balances (not including pending)
-        currentChecking = checkingBalance || checking;
+        // Use checking column directly (col I = 8)
+        currentChecking = checking; // 567.45
         
-        // CURRENT STATEMENT BALANCES (what's on your statement NOW, before pending hits)
-        chaseStatement = parseValue(row[14]); // 819.38
-        bofaStatement = parseValue(row[16]); // 3,727.93
-        bofa2Statement = parseValue(row[17]); // 13,627.46
+        // DEBUG: Log columns to verify
+        console.log('📊 EXCEL ROW 0 - Key columns:');
+        console.log('  Col 14 (O):', row[14]);
+        console.log('  Col 16 (Q):', row[16]);
+        console.log('  Col 17 (R):', row[17]);
+      }
+      
+      // Excel ROW 3 (code index 0): O3, Q3, R3 = CURRENT balance (what's on card today)
+      if (index === 0) {
+        currentChase = parseValue(row[14]); // O3 = Current Chase balance
+        currentBofA = parseValue(row[16]); // Q3 = Current BofA balance
+        currentBofA2 = parseValue(row[17]); // R3 = Current BofA 2 balance
         
-        // CURRENT BALANCES (row 1 in Excel has today's spending already applied)
-        // So subtract today's spending to get ACTUAL current balance
-        const todaySpending = spending; // $200 for today (13-Nov)
+        console.log('📊 EXCEL ROW 3 (O3, Q3, R3) - CURRENT BALANCE (What\'s on card today):');
+        console.log('  Chase Current (O3):', currentChase);
+        console.log('  BofA Current (Q3):', currentBofA);
+        console.log('  BofA 2 Current (R3):', currentBofA2);
+      }
+      
+      // Excel ROW 4 (code index 1): O4, Q4, R4 = PENDING charges
+      if (index === 1) {
+        pendingChaseCharges = parseValue(row[14]); // O4 = Chase Pending
+        pendingBofACharges = parseValue(row[16]); // Q4 = BofA Pending
+        pendingBofA2Charges = parseValue(row[17]); // R4 = BofA 2 Pending
         
-        currentChase = chase; // 858.18
-        currentBofA = bofa; // 3,727.93
-        currentBofA2 = bofa2 - todaySpending; // 14787.08 - 200 = 14587.08
+        console.log('📊 EXCEL ROW 4 (O4, Q4, R4) - PENDING:');
+        console.log('  Chase Pending (O4):', pendingChaseCharges);
+        console.log('  BofA Pending (Q4):', pendingBofACharges);
+        console.log('  BofA 2 Pending (R4):', pendingBofA2Charges);
+      }
+      
+      // Excel ROW 5 (code index 2): O5, Q5, R5 = TOTAL (we don't use this, already have current from row 3)
+      if (index === 2) {
+        const chaseTotalCheck = parseValue(row[14]); // O5
+        const bofaTotalCheck = parseValue(row[16]); // Q5
+        const bofa2TotalCheck = parseValue(row[17]); // R5
         
-        console.log('✅ CURRENT BALANCES (from Row 1, BEFORE today\'s spending):');
-        console.log('  Row 1 bofa2:', bofa2, '- Today spending:', todaySpending, '= Current:', currentBofA2);
-        console.log('  Chase - Statement:', chaseStatement, 'Current:', currentChase, 'Pending:', currentChase - chaseStatement);
-        console.log('  BofA - Statement:', bofaStatement, 'Current:', currentBofA, 'Pending:', currentBofA - bofaStatement);
-        console.log('  BofA2 - Statement:', bofa2Statement, 'Current:', currentBofA2, 'Pending:', currentBofA2 - bofa2Statement);
+        console.log('📊 EXCEL ROW 5 (O5, Q5, R5) - TOTAL (current + pending check):');
+        console.log('  Chase Total (O5):', chaseTotalCheck);
+        console.log('  BofA Total (Q5):', bofaTotalCheck);
+        console.log('  BofA 2 Total (R5):', bofa2TotalCheck);
+      }
+      
+      // Excel ROW 7 (code index 4): N7, Q7, R7 = STATEMENT balances  
+      if (index === 4) {
+        chaseStatement = parseValue(row[13]); // N7 = 808.07
+        bofaStatement = parseValue(row[16]); // Q7 = 3727.93
+        bofa2Statement = parseValue(row[17]); // R7 = 9971.60
+        
+        console.log('📊 EXCEL ROW 7 (N7, Q7, R7) - STATEMENT BALANCES:');
+        console.log('  Chase Statement (N7):', chaseStatement);
+        console.log('  BofA Statement (Q7):', bofaStatement);
+        console.log('  BofA 2 Statement (R7):', bofa2Statement);
       }
 
       // Track upcoming payments
@@ -169,11 +211,11 @@ function App() {
     });
 
     const projectedBalance = rows.length > 0 ? rows[rows.length - 1].totalBalance : 0;
-
-    // Calculate pending charges (current - statement = pending)
-    const pendingChaseCharges = currentChase - chaseStatement;
-    const pendingBofACharges = currentBofA - bofaStatement;
-    const pendingBofA2Charges = currentBofA2 - bofa2Statement;
+    
+    console.log('💳 FINAL LOADED VALUES:');
+    console.log('  Chase: Total=' + currentChase + ', Statement=' + chaseStatement + ', Pending=' + pendingChaseCharges);
+    console.log('  BofA: Total=' + currentBofA + ', Statement=' + bofaStatement + ', Pending=' + pendingBofACharges);
+    console.log('  BofA 2: Total=' + currentBofA2 + ', Statement=' + bofa2Statement + ', Pending=' + pendingBofA2Charges);
     
     // Get NEXT projected statements from the bottom rows with the orange highlighting
     // These are in the last few rows where we see $808.07, $3,727.93, $9,971.60
