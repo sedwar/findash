@@ -151,7 +151,19 @@ function QuickUpdateModal({ isOpen, onClose, currentValues, excelData, onSave, i
     <div className="modal-overlay" onClick={handleCancel}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{isFirstTime ? '🎉 Welcome! Setup Your Dashboard' : '💰 Quick Update'}</h2>
+          <div className="modal-title-section">
+            <h2>{isFirstTime ? '🎉 Welcome! Setup Your Dashboard' : '💰 Financial Control Center'}</h2>
+            {excelData && (
+              <button 
+                className="btn-load-excel-header"
+                onClick={handleLoadFromExcel}
+                type="button"
+                title="Load from Excel file"
+              >
+                💾
+              </button>
+            )}
+          </div>
           <p className="modal-subtitle">
             {isFirstTime 
               ? 'Enter your current balances and regular expenses to get started' 
@@ -179,19 +191,6 @@ function QuickUpdateModal({ isOpen, onClose, currentValues, excelData, onSave, i
           {/* BALANCES TAB */}
           {activeTab === 'balances' && (
             <>
-              {excelData && (
-                <div className="excel-load-section">
-                  <button 
-                    className="btn-load-excel"
-                    onClick={handleLoadFromExcel}
-                    type="button"
-                  >
-                    📄 Load from Excel File
-                  </button>
-                  <p className="excel-hint">Have your budget.xlsx file? Click to load values from it.</p>
-                </div>
-              )}
-              
               <div className="input-group">
                 <label>
                   <span className="label-icon">💵</span>
