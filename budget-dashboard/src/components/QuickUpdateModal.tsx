@@ -33,6 +33,9 @@ interface QuickUpdateModalProps {
     pendingBofA: number;
     pendingBofA2: number;
     pendingChase: number;
+    paycheckAmount?: number;
+    rent?: number;
+    weeklySpending?: number;
   };
   onSave: (values: {
     checking: number;
@@ -90,6 +93,9 @@ function QuickUpdateModal({ isOpen, onClose, currentValues, excelData, onSave, i
       setPendingBofA(excelData.pendingBofA);
       setPendingBofA2(excelData.pendingBofA2);
       setPendingChase(excelData.pendingChase);
+      if (excelData.paycheckAmount) setPaycheckAmount(excelData.paycheckAmount);
+      if (excelData.rent) setRent(excelData.rent);
+      if (excelData.weeklySpending) setWeeklySpending(excelData.weeklySpending);
       console.log('✅ Values loaded into modal');
     }
   };

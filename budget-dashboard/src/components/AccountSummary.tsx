@@ -821,7 +821,10 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
           currentChase: data.summary.currentChase,
           pendingBofA: data.summary.pendingBofACharges,
           pendingBofA2: data.summary.pendingBofA2Charges,
-          pendingChase: data.summary.pendingChaseCharges
+          pendingChase: data.summary.pendingChaseCharges,
+          paycheckAmount: 3500,
+          rent: 1760,
+          weeklySpending: 200
         } : undefined}
         onSave={handleQuickUpdate}
         isFirstTime={isFirstTime}
