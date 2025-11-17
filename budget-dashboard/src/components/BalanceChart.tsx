@@ -135,10 +135,7 @@ function BalanceChart({ rows, defaultZoom = 1 }: BalanceChartProps) {
         justifyContent: 'center',
         alignItems: 'center',
         flexWrap: 'wrap',
-        padding: '12px',
-        background: 'rgba(138, 43, 226, 0.08)',
-        borderRadius: '12px',
-        border: '1px solid rgba(138, 43, 226, 0.2)'
+        padding: '12px'
       }}>
         <button
           onClick={handlePanLeft}

@@ -35,9 +35,6 @@
 }
 
 .chart-container-small {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
   padding: 32px;
   transition: all 0.3s ease;
   cursor: default;
@@ -108,6 +105,12 @@
   margin-bottom: 24px;
 }
 
+@media (min-width: 769px) {
+  .chart-wrapper {
+    height: 500px !important;
+  }
+}
+
 @media (max-width: 1024px) {
   .charts-section {
     grid-template-columns: 1fr;
@@ -153,39 +156,35 @@
     max-width: 100%;
     display: block;
     position: relative;
-  }
-
-  .charts-section {
-    padding: 0 12px 12px;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    display: block;
-    position: relative;
-    margin-bottom: 16px;
+    margin: 0 auto;
   }
 
   .charts-section-compact {
-    padding: 0 12px 12px;
+    padding: 12px;
     display: block;
     position: relative;
     margin-bottom: 16px;
-  }
-  
-  .chart-container {
-    padding: 12px;
-    border-radius: 8px;
-    display: block;
-    position: relative;
-    margin-bottom: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    min-height: 550px;
   }
 
   .chart-container-small {
-    padding: 12px;
+    padding: 0;
     cursor: pointer;
-    display: block;
+    display: flex;
+    flex-direction: column;
     position: relative;
-    margin-bottom: 12px;
+    margin: 0;
+    margin-bottom: 0;
     pointer-events: auto !important;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: visible;
+    flex-grow: 1;
   }
 
   .chart-container-small:active {
@@ -200,22 +199,20 @@
   .chart-container-small h2 {
     font-size: 0.65rem;
     margin-bottom: 8px;
+    padding: 0 12px;
+    padding-top: 12px;
   }
 
   .chart-wrapper {
-    height: 450px !important;
     display: flex !important;
     flex-direction: column !important;
     position: relative;
     overflow: visible !important;
-    padding-bottom: 0 !important;
-  }
-
-  .chart-container-small {
-    overflow: visible !important;
-    margin-bottom: 50px !important;
-    padding-bottom: 0 !important;
-    min-height: 520px !important;
+    padding: 0 12px 60px 12px !important;
+    margin: 0 !important;
+    height: auto !important;
+    min-height: auto;
+    width: 100%;
   }
 
   .chart-container-small h2::after {
@@ -224,32 +221,90 @@
     opacity: 0.7;
   }
 
-  /* Force vertical stacking */
+  .charts-section {
+    padding: 0 8px 8px;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    display: block;
+    position: relative;
+    margin-top: 0;
+    margin-bottom: 16px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .chart-container {
+    padding: 12px;
+    border-radius: 8px;
+    display: block;
+    position: relative;
+    margin-bottom: 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
   .account-summary-new {
     margin-bottom: 12px !important;
   }
 
-  .charts-section-compact {
-    margin-bottom: 8px !important;
-    clear: both;
-    padding-bottom: 0 !important;
-  }
-
-  .charts-section {
-    margin-bottom: 20px !important;
-    clear: both;
-    padding-top: 0 !important;
-  }
-
   .transactions-section {
-    padding: 0 12px 16px;
+    padding: 0 8px 12px;
     display: block;
     position: relative;
-    clear: both;
-    margin-top: 20px !important;
+    margin-top: 16px !important;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .transactions-section > div {
     padding: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  .charts-section {
+    padding: 0 4px 4px;
+    margin-bottom: 8px;
+  }
+
+  .charts-section-compact {
+    padding: 0 4px 4px;
+    margin-bottom: 8px;
+  }
+
+  .chart-container {
+    padding: 8px;
+    margin-bottom: 4px;
+  }
+
+  .chart-container-small {
+    padding: 8px;
+    margin-bottom: 8px;
+  }
+
+  .chart-wrapper {
+    height: 150px !important;
+  }
+
+  .chart-container-small {
+    min-height: auto !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 12px !important;
+  }
+
+  .transactions-section {
+    padding: 0 4px 8px;
+    margin-top: 8px !important;
+  }
+
+  .transactions-section > div {
+    padding: 8px;
   }
 }

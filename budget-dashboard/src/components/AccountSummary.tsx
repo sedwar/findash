@@ -102,23 +102,23 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
   }, []);
   
   // ACTUAL CURRENT BALANCES (what you have RIGHT NOW) - Default to 0
-  // Only use Excel data if there are stored balances AND we're not in first-time mode
-  const [checking, setChecking] = useState(storedBalances?.checking ?? (storedBalances ? data?.summary?.currentChecking : 0) ?? 0);
-  const [bofa, setBofa] = useState(storedBalances?.bofa ?? (storedBalances ? data?.summary?.currentBofA : 0) ?? 0);
-  const [bofa2, setBofa2] = useState(storedBalances?.bofa2 ?? (storedBalances ? data?.summary?.currentBofA2 : 0) ?? 0);
-  const [chase, setChase] = useState(storedBalances?.chase ?? (storedBalances ? data?.summary?.currentChase : 0) ?? 0);
+  // ONLY load from localStorage, never auto-load from Excel on first time
+  const [checking, setChecking] = useState(storedBalances?.checking ?? 0);
+  const [bofa, setBofa] = useState(storedBalances?.bofa ?? 0);
+  const [bofa2, setBofa2] = useState(storedBalances?.bofa2 ?? 0);
+  const [chase, setChase] = useState(storedBalances?.chase ?? 0);
   
   // STATEMENT BALANCES (what the cards will be after pending charges hit) - Default to 0
-  // Only use Excel data if there are stored balances AND we're not in first-time mode
-  const [bofaStatement, setBofaStatement] = useState(storedBalances?.bofaStatement ?? (storedBalances ? data?.summary?.bofaStatement : 0) ?? 0);
-  const [bofa2Statement, setBofa2Statement] = useState(storedBalances?.bofa2Statement ?? (storedBalances ? data?.summary?.bofa2Statement : 0) ?? 0);
-  const [chaseStatement, setChaseStatement] = useState(storedBalances?.chaseStatement ?? (storedBalances ? data?.summary?.chaseStatement : 0) ?? 0);
+  // ONLY load from localStorage, never auto-load from Excel on first time
+  const [bofaStatement, setBofaStatement] = useState(storedBalances?.bofaStatement ?? 0);
+  const [bofa2Statement, setBofa2Statement] = useState(storedBalances?.bofa2Statement ?? 0);
+  const [chaseStatement, setChaseStatement] = useState(storedBalances?.chaseStatement ?? 0);
   
   // PENDING CHARGES (editable) - Default to 0
-  // Only use Excel data if there are stored balances AND we're not in first-time mode
-  const [pendingBofA, setPendingBofA] = useState(storedBalances?.pendingBofA ?? (storedBalances ? data?.summary?.pendingBofACharges : 0) ?? 0);
-  const [pendingBofA2, setPendingBofA2] = useState(storedBalances?.pendingBofA2 ?? (storedBalances ? data?.summary?.pendingBofA2Charges : 0) ?? 0);
-  const [pendingChase, setPendingChase] = useState(storedBalances?.pendingChase ?? (storedBalances ? data?.summary?.pendingChaseCharges : 0) ?? 0);
+  // ONLY load from localStorage, never auto-load from Excel on first time
+  const [pendingBofA, setPendingBofA] = useState(storedBalances?.pendingBofA ?? 0);
+  const [pendingBofA2, setPendingBofA2] = useState(storedBalances?.pendingBofA2 ?? 0);
+  const [pendingChase, setPendingChase] = useState(storedBalances?.pendingChase ?? 0);
   
   // YOUR RULES (how money flows) - Default values
   const [paycheckAmount, setPaycheckAmount] = useState(storedRules?.paycheckAmount ?? 3500);
@@ -137,21 +137,6 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
     chasePayment: number;
   }>>([]);
 
-  // Sync from data prop if it changes and we don't have stored values
-  useEffect(() => {
-    if (!storedBalances && data?.summary) {
-      setChecking(data.summary.currentChecking ?? 0);
-      setBofa(data.summary.currentBofA ?? 0);
-      setBofa2(data.summary.currentBofA2 ?? 0);
-      setChase(data.summary.currentChase ?? 0);
-      setBofaStatement(data.summary.bofaStatement ?? 0);
-      setBofa2Statement(data.summary.bofa2Statement ?? 0);
-      setChaseStatement(data.summary.chaseStatement ?? 0);
-      setPendingBofA(data.summary.pendingBofACharges ?? 0);
-      setPendingBofA2(data.summary.pendingBofA2Charges ?? 0);
-      setPendingChase(data.summary.pendingChaseCharges ?? 0);
-    }
-  }, [data, storedBalances]);
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
@@ -217,7 +202,7 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
     // Get the LAST row of projections (end of month) to include all spending
     const firstMonth = projectedRows.length > 0 ? projectedRows[projectedRows.length - 1] : null;
     
-    const newProjections = [];
+    const newProjections: any[] = [];
     if (firstMonth) {
       newProjections.push({
         bofa: firstMonth.bofa,
@@ -804,38 +789,27 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
       </div>
 
       {/* Quick Update Modal */}
-      {isModalOpen && data && console.log('📋 Passing Excel Data to Modal:', {
-        checking: data.summary.currentChecking,
-        bofaStatement: data.summary.bofaStatement,
-        bofa2Statement: data.summary.bofa2Statement,
-        chaseStatement: data.summary.chaseStatement,
-        currentBofA: data.summary.currentBofA,
-        currentBofA2: data.summary.currentBofA2,
-        currentChase: data.summary.currentChase,
-        pendingBofA: data.summary.pendingBofACharges,
-        pendingBofA2: data.summary.pendingBofA2Charges,
-        pendingChase: data.summary.pendingChaseCharges
-      })}
+      {isModalOpen && (
       <QuickUpdateModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         currentValues={{
-          checking,
-          bofaStatement,
-          bofa2Statement,
-          chaseStatement,
-          currentBofA: bofa,
-          currentBofA2: bofa2,
-          currentChase: chase,
-          pendingBofA,
-          pendingBofA2,
-          pendingChase,
-          paycheckAmount,
-          rent,
-          weeklySpending,
-          bofaPayment,
-          bofa2Payment,
-          chasePayment
+          checking: isFirstTime ? 0 : checking,
+          bofaStatement: isFirstTime ? 0 : bofaStatement,
+          bofa2Statement: isFirstTime ? 0 : bofa2Statement,
+          chaseStatement: isFirstTime ? 0 : chaseStatement,
+          currentBofA: isFirstTime ? 0 : bofa,
+          currentBofA2: isFirstTime ? 0 : bofa2,
+          currentChase: isFirstTime ? 0 : chase,
+          pendingBofA: isFirstTime ? 0 : pendingBofA,
+          pendingBofA2: isFirstTime ? 0 : pendingBofA2,
+          pendingChase: isFirstTime ? 0 : pendingChase,
+          paycheckAmount: isFirstTime ? 0 : paycheckAmount,
+          rent: isFirstTime ? 0 : rent,
+          weeklySpending: isFirstTime ? 0 : weeklySpending,
+          bofaPayment: isFirstTime ? 0 : bofaPayment,
+          bofa2Payment: isFirstTime ? 0 : bofa2Payment,
+          chasePayment: isFirstTime ? 0 : chasePayment
         }}
         excelData={data ? {
           checking: data.summary.currentChecking,
@@ -852,6 +826,7 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
         onSave={handleQuickUpdate}
         isFirstTime={isFirstTime}
       />
+      )}
     </div>
   );
 }
