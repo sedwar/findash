@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import type { FinancialData } from '../types';
+import type { FinancialData, CashFlowRow } from '../types';
 import { generateProjection, type ProjectionRules } from '../utils/projectionEngine';
 import EditableWidget from './EditableWidget';
 import QuickUpdateModal from './QuickUpdateModal';
 import './AccountSummary.css';
 
+// Props for AccountSummary component
 interface AccountSummaryProps {
   data: FinancialData;
+  projectedRows?: CashFlowRow[];
   onRulesChange?: (rules: any) => void;
   onProjectionCyclesChange?: (cycles: any[]) => void;
 }
@@ -49,9 +51,20 @@ function saveRules(rules: any) {
   }
 }
 
-function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: AccountSummaryProps) {
+function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionCyclesChange }: AccountSummaryProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(false);
+  
+  // Helper function for day suffixes (1st, 2nd, 3rd, etc.)
+  const getDaySuffix = (day: number): string => {
+    if (day >= 11 && day <= 13) return 'th';
+    switch (day % 10) {
+      case 1: return 'st';
+      case 2: return 'nd';
+      case 3: return 'rd';
+      default: return 'th';
+    }
+  };
   
   // Check for first-time user on mount
   useEffect(() => {
@@ -197,7 +210,7 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
     
     // Generate projections for 1 month
     const projectedRows = generateProjection(rules, 1);
-    
+      
     // Extract key data for the first payment cycle
     // Get the LAST row of projections (end of month) to include all spending
     const firstMonth = projectedRows.length > 0 ? projectedRows[projectedRows.length - 1] : null;
@@ -221,7 +234,7 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
         payments: { bofaPayment, bofa2Payment, chasePayment }
       });
     }
-    
+      
     // For additional cycles, use the previous month's ending balances as the starting point
     projectionCycles.forEach((cycle, index) => {
       // Get the previous projection's ending balances
@@ -260,7 +273,7 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
           payments: cycle
         });
       }
-    });
+      });
 
     setProjectionsState(newProjections);
   }, [checking, bofa, bofa2, chase, bofaStatement, bofa2Statement, chaseStatement, bofaPayment, bofa2Payment, chasePayment, paycheckAmount, rent, weeklySpending, projectionCycles]);
@@ -514,35 +527,83 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
         </div>
         
         <h3 style={{ marginTop: '32px' }}>PAYMENT STRATEGY (Monthly - 4th)</h3>
-        <div className="strategy-grid">
-          <EditableWidget
-            label="💳 Pay BofA"
-            value={bofaPayment}
-            onSave={setBofaPayment}
-            color="#ff453a"
-            size="small"
-            onPayFull={() => setBofaPayment(bofaStatement)}
-            isWarning={hasNegativeCashFlow(0)}
-          />
-          <EditableWidget
-            label="💳 Pay BofA 2"
-            value={bofa2Payment}
-            onSave={setBofa2Payment}
-            color="#ff6b9d"
-            size="small"
-            onPayFull={() => setBofa2Payment(bofa2Statement)}
-            isWarning={hasNegativeCashFlow(0)}
-          />
-          <EditableWidget
-            label="💳 Pay Chase"
-            value={chasePayment}
-            onSave={setChasePayment}
-            color="#ff9f0a"
-            size="small"
-            onPayFull={() => setChasePayment(chaseStatement)}
-            isWarning={hasNegativeCashFlow(0)}
-          />
-        </div>
+        {(() => {
+          // Calculate cash available on each due date
+          const today = new Date();
+          const referencePayday = new Date('2025-11-20');
+          
+          const isPayday = (testDate: Date) => {
+            const daysDiff = Math.floor((testDate.getTime() - referencePayday.getTime()) / (1000 * 60 * 60 * 24));
+            const weeksDiff = Math.floor(daysDiff / 7);
+            return testDate.getDay() === 4 && weeksDiff % 2 === 0;
+          };
+          
+          const getCashOnDate = (targetDay: number, excludeThisPayment: number = 0) => {
+            // Find the projected row for the target date in the current/next month
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+
+            const targetRow = projectedRows.find(row => {
+              const rowDate = new Date(row.date);
+              const rowDay = rowDate.getDate();
+              const rowMonth = rowDate.getMonth();
+              const rowYear = rowDate.getFullYear();
+
+              // Look for the target day in the current month or next month
+              return rowDay === targetDay &&
+                     ((rowMonth === currentMonth && rowYear === currentYear) ||
+                      (rowMonth === (currentMonth + 1) % 12 && (rowMonth === 0 ? rowYear === currentYear + 1 : rowYear === currentYear)));
+            });
+
+            if (targetRow) {
+              // The projected row shows cash balance after all transactions up to and including this date
+              // This includes the payment for this date, so this IS the "cash after payment"
+              return targetRow.checking;
+            }
+
+            // Fallback to current checking if no projected row found
+            return checking;
+          };
+          
+          const cashAfterBofA = getCashOnDate(3);
+          const cashAfterChase = getCashOnDate(8);
+          const cashAfterBofA2 = getCashOnDate(24);
+          
+          return (
+            <div className="strategy-grid">
+              <EditableWidget
+                label="💳 Pay BofA (Due 3rd)"
+                value={bofaPayment}
+                onSave={setBofaPayment}
+                color="#ff453a"
+                size="small"
+                onPayFull={() => setBofaPayment(bofaStatement)}
+                isWarning={cashAfterBofA < 0 && bofaPayment > 0}
+                sublabel={bofaPayment > 0 ? `After payment: $${cashAfterBofA.toFixed(2)}` : `Before payment: $${cashAfterBofA.toFixed(2)}`}
+              />
+              <EditableWidget
+                label="💳 Pay BofA 2 (Due 24th)"
+                value={bofa2Payment}
+                onSave={setBofa2Payment}
+                color="#ff6b9d"
+                size="small"
+                onPayFull={() => setBofa2Payment(bofa2Statement)}
+                isWarning={cashAfterBofA2 < 0 && bofa2Payment > 0}
+                sublabel={bofa2Payment > 0 ? `After payment: $${cashAfterBofA2.toFixed(2)}` : `Before payment: $${cashAfterBofA2.toFixed(2)}`}
+              />
+              <EditableWidget
+                label="💳 Pay Chase (Due 8th)"
+                value={chasePayment}
+                onSave={setChasePayment}
+                color="#ff9f0a"
+                size="small"
+                onPayFull={() => setChasePayment(chaseStatement)}
+                isWarning={cashAfterChase < 0 && chasePayment > 0}
+                sublabel={chasePayment > 0 ? `After payment: $${cashAfterChase.toFixed(2)}` : `Before payment: $${cashAfterChase.toFixed(2)}`}
+              />
+            </div>
+          );
+        })()}
         
         <h3 style={{ marginTop: '32px' }}>📋 STATEMENT BALANCES (WHAT YOU OWE THIS MONTH)</h3>
         <p style={{ 
@@ -593,25 +654,25 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
                 label="BofA Balance"
                 value={projections[0].bofa}
                 onSave={() => {}}
-                color="#ff453a"
+                color={projections[0].bofa === 0 ? "#00ff88" : "#ff453a"}
                 size="small"
-                sublabel={bofaPayment > 0 ? `After $${bofaPayment} payment` : 'No payment set'}
+                sublabel={projections[0].bofa === 0 ? "✅ PAID OFF!" : (bofaPayment > 0 ? `After $${bofaPayment} payment` : 'No payment set')}
               />
               <EditableWidget
                 label="BofA 2 Balance"
                 value={projections[0].bofa2}
                 onSave={() => {}}
-                color="#ff6b9d"
+                color={projections[0].bofa2 === 0 ? "#00ff88" : "#ff6b9d"}
                 size="small"
-                sublabel={`After $${bofa2Payment} payment + $${weeklySpending * 4} spending`}
+                sublabel={projections[0].bofa2 === 0 ? "✅ PAID OFF!" : `After $${bofa2Payment} payment + $${weeklySpending * 4} spending`}
               />
               <EditableWidget
                 label="Chase Balance"
                 value={projections[0].chase}
                 onSave={() => {}}
-                color="#ff9f0a"
+                color={projections[0].chase === 0 ? "#00ff88" : "#ff9f0a"}
                 size="small"
-                sublabel={chasePayment > 0 ? `After $${chasePayment} payment` : 'No payment set'}
+                sublabel={projections[0].chase === 0 ? "✅ PAID OFF!" : (chasePayment > 0 ? `After $${chasePayment} payment` : 'No payment set')}
               />
             </div>
           </>
@@ -620,36 +681,75 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
         {/* Additional Projection Cycles */}
         {projectionCycles.map((cycle, index) => {
           const projection = projections[index + 1];
-          return projection ? (
+          if (!projection) return null;
+          
+          // Calculate cash available for this future month
+          const prevProjection = projections[index]; // Previous month's ending balances
+          const startingChecking = prevProjection?.checkingBalance || checking;
+          
+          const getCashOnDateForCycle = (targetDay: number, payment: 'bofa' | 'chase' | 'bofa2') => {
+            // Find the projected row for the target date in the future month
+            const today = new Date();
+            const targetMonth = today.getMonth() + index + 1;
+            const targetYear = today.getFullYear() + Math.floor(targetMonth / 12);
+            const adjustedMonth = targetMonth % 12;
+
+            const targetRow = projectedRows.find(row => {
+              const rowDate = new Date(row.date);
+              const rowDay = rowDate.getDate();
+              const rowMonth = rowDate.getMonth();
+              const rowYear = rowDate.getFullYear();
+
+              // Look for the target day in the specific future month
+              return rowDay === targetDay && rowMonth === adjustedMonth && rowYear === targetYear;
+            });
+
+            if (targetRow) {
+              // The projected row shows cash balance after all transactions up to and including this date
+              return targetRow.checking;
+            }
+
+            // Fallback to starting checking
+            return startingChecking;
+          };
+          
+          const cashAfterBofA = getCashOnDateForCycle(3, 'bofa');
+          const cashAfterChase = getCashOnDateForCycle(8, 'chase');
+          const cashAfterBofA2 = getCashOnDateForCycle(24, 'bofa2');
+          
+          return (
             <div key={index}>
-              <h3 style={{ marginTop: '32px' }}>{getMonthName(index + 2).toUpperCase()} PAYMENTS</h3>
+              <h3 style={{ marginTop: '32px' }}>{getMonthName(index + 1).toUpperCase()} PAYMENTS</h3>
               <div className="strategy-grid">
                 <EditableWidget
-                  label={`💳 Pay BofA (${getMonthName(index + 2)})`}
+                  label={`💳 Pay BofA (Due 3rd)`}
                   value={cycle.bofaPayment}
                   onSave={(val) => updateProjectionCycle(index, 'bofaPayment', val)}
                   color="#ff453a"
                   size="small"
                   onPayFull={() => updateProjectionCycle(index, 'bofaPayment', projections[index]?.bofa || 0)}
-                  isWarning={hasNegativeCashFlow(index + 1)}
+                  isWarning={cashAfterBofA < 0 && cycle.bofaPayment > 0}
+                  sublabel={cycle.bofaPayment > 0 ? `After payment: $${cashAfterBofA.toFixed(2)}` : `Before payment: $${cashAfterBofA.toFixed(2)}`}
                 />
                 <EditableWidget
-                  label={`💳 Pay BofA 2 (${getMonthName(index + 2)})`}
+                  label={`💳 Pay BofA 2 (Due 24th)`}
                   value={cycle.bofa2Payment}
                   onSave={(val) => updateProjectionCycle(index, 'bofa2Payment', val)}
                   color="#ff6b9d"
                   size="small"
                   onPayFull={() => updateProjectionCycle(index, 'bofa2Payment', projections[index]?.bofa2 || 0)}
-                  isWarning={hasNegativeCashFlow(index + 1)}
+                  isWarning={cashAfterBofA2 < 0 && cycle.bofa2Payment > 0}
+                  sublabel={cycle.bofa2Payment > 0 ? `After payment: $${cashAfterBofA2.toFixed(2)}` : `Before payment: $${cashAfterBofA2.toFixed(2)}`}
                 />
                 <EditableWidget
-                  label={`💳 Pay Chase (${getMonthName(index + 2)})`}
+                  label={`💳 Pay Chase (Due 8th)`}
                   value={cycle.chasePayment}
                   onSave={(val) => updateProjectionCycle(index, 'chasePayment', val)}
                   color="#ff9f0a"
                   size="small"
                   onPayFull={() => updateProjectionCycle(index, 'chasePayment', projections[index]?.chase || 0)}
-                  isWarning={hasNegativeCashFlow(index + 1)}
+                  isWarning={cashAfterChase < 0 && cycle.chasePayment > 0}
+                  sublabel={cycle.chasePayment > 0 ? `After payment: $${cashAfterChase.toFixed(2)}` : `Before payment: $${cashAfterChase.toFixed(2)}`}
                 />
               </div>
 
@@ -659,29 +759,29 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
                   label="BofA Balance"
                   value={projection.bofa}
                   onSave={() => {}}
-                  color="#ff453a"
+                  color={projection.bofa === 0 ? "#00ff88" : "#ff453a"}
                   size="small"
-                  sublabel={`After $${cycle.bofaPayment} payment`}
+                  sublabel={projection.bofa === 0 ? "✅ PAID OFF!" : `After $${cycle.bofaPayment} payment`}
                 />
                 <EditableWidget
                   label="BofA 2 Balance"
                   value={projection.bofa2}
                   onSave={() => {}}
-                  color="#ff6b9d"
+                  color={projection.bofa2 === 0 ? "#00ff88" : "#ff6b9d"}
                   size="small"
-                  sublabel={`After $${cycle.bofa2Payment} payment + $${weeklySpending * 4} spending`}
+                  sublabel={projection.bofa2 === 0 ? "✅ PAID OFF!" : `After $${cycle.bofa2Payment} payment + $${weeklySpending * 4} spending`}
                 />
                 <EditableWidget
                   label="Chase Balance"
                   value={projection.chase}
                   onSave={() => {}}
-                  color="#ff9f0a"
+                  color={projection.chase === 0 ? "#00ff88" : "#ff9f0a"}
                   size="small"
-                  sublabel={`After $${cycle.chasePayment} payment`}
+                  sublabel={projection.chase === 0 ? "✅ PAID OFF!" : `After $${cycle.chasePayment} payment`}
                 />
               </div>
             </div>
-          ) : null;
+          );
         })}
 
         {/* Project Further Buttons */}
@@ -761,28 +861,28 @@ function AccountSummary({ data, onRulesChange, onProjectionCyclesChange }: Accou
             
             return (
               <div key={index} className="debt-projection">
-                <div className="projection-arrow-line">↓</div>
-                <div className="debt-title" style={{ marginTop: '16px', opacity: 0.8 }}>
+              <div className="projection-arrow-line">↓</div>
+              <div className="debt-title" style={{ marginTop: '16px', opacity: 0.8 }}>
                   💳 Total CC Debt ({getMonthName(index + 1).toUpperCase()})
-                </div>
-                <div className="debt-value" style={{ 
+              </div>
+              <div className="debt-value" style={{ 
                   color: isImproved ? '#00ff88' : '#ff9f0a',
-                  fontSize: '2.5rem'
-                }}>
+                fontSize: '2.5rem'
+              }}>
                   ${(totalDebt / 1000).toFixed(1)}k
-                </div>
-                <div style={{
-                  fontSize: '0.9rem',
-                  fontWeight: '700',
-                  marginTop: '8px',
+              </div>
+              <div style={{
+                fontSize: '0.9rem',
+                fontWeight: '700',
+                marginTop: '8px',
                   color: isImproved ? '#00ff88' : '#ff9f0a'
-                }}>
+              }}>
                   {isImproved
                     ? `↓ Down $${((currentDebt - totalDebt) / 1000).toFixed(1)}k`
                     : `↑ Up $${((totalDebt - currentDebt) / 1000).toFixed(1)}k`
-                  }
-                </div>
+                }
               </div>
+            </div>
             );
           })}
         </div>

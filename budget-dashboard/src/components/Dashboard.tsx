@@ -49,7 +49,9 @@ function Dashboard({ data }: DashboardProps) {
     bofa2PaymentAmount: 0,
     chasePaymentAmount: 0,
     rentDay: 23,
-    paymentDay: 4, // Default to 4th of month (user said around 3rd)
+    bofaPaymentDay: 3,    // BofA due on 3rd
+    bofa2PaymentDay: 24,  // BofA 2 due on 24th
+    chasePaymentDay: 8,   // Chase due on 8th
     payDayReference: new Date('2025-11-20')
   });
 
@@ -92,7 +94,9 @@ function Dashboard({ data }: DashboardProps) {
           bofa2PaymentAmount: cycle.bofa2Payment,
           chasePaymentAmount: cycle.chasePayment,
           rentDay: projectionRules.rentDay,
-          paymentDay: projectionRules.paymentDay,
+          bofaPaymentDay: projectionRules.bofaPaymentDay,
+          bofa2PaymentDay: projectionRules.bofa2PaymentDay,
+          chasePaymentDay: projectionRules.chasePaymentDay,
           payDayReference: projectionRules.payDayReference,
           startDate: cycleStartDate
         };
@@ -166,7 +170,7 @@ function Dashboard({ data }: DashboardProps) {
 
   return (
     <div className="dashboard">
-      <AccountSummary data={data} onRulesChange={handleRulesChange} onProjectionCyclesChange={handleProjectionCyclesChange} />
+      <AccountSummary data={data} projectedRows={projectedRows} onRulesChange={handleRulesChange} onProjectionCyclesChange={handleProjectionCyclesChange} />
       
       {/* Charts */}
       <div className="charts-section-compact">

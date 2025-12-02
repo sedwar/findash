@@ -29,7 +29,9 @@ export interface ProjectionRules {
   bofaPaymentAmount?: number; // How much to pay on BofA monthly
   bofa2PaymentAmount?: number; // How much to pay on BofA 2 monthly
   chasePaymentAmount?: number; // How much to pay on Chase monthly
-  paymentDay?: number; // Day of month to make payments (default: 3)
+  bofaPaymentDay?: number; // Day of month for BofA payment (default: 3)
+  bofa2PaymentDay?: number; // Day of month for BofA 2 payment (default: 24)
+  chasePaymentDay?: number; // Day of month for Chase payment (default: 8)
   
   // Rules
   rentDay: number; // Day of month rent is due (23)
@@ -93,22 +95,25 @@ export function generateMinimumPaymentProjection(rules: ProjectionRules, maxMont
     let chasePayment = 0;
     let notes = '';
     
-    // Post pending charges on day 1-2
-    if (!pendingPosted && dayOfMonth <= 2) {
-      if (rules.pendingBofA) {
-        bofa += rules.pendingBofA;
-        notes = notes ? notes + ', Pending BofA' : 'Pending BofA';
-      }
-      if (rules.pendingBofA2) {
-        bofa2 += rules.pendingBofA2;
-        notes = notes ? notes + ', Pending BofA2' : 'Pending BofA2';
-      }
-      if (rules.pendingChase) {
-        chase += rules.pendingChase;
-        notes = notes ? notes + ', Pending Chase' : 'Pending Chase';
-      }
-      if (rules.pendingBofA || rules.pendingBofA2 || rules.pendingChase) {
-        pendingPosted = true;
+    // Post pending charges within 1-2 days from start of projection
+    if (!pendingPosted) {
+      const daysSinceStart = Math.floor((current.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSinceStart >= 1 && daysSinceStart <= 2) {
+        if (rules.pendingBofA) {
+          bofa += rules.pendingBofA;
+          notes = notes ? notes + ', Pending BofA' : 'Pending BofA';
+        }
+        if (rules.pendingBofA2) {
+          bofa2 += rules.pendingBofA2;
+          notes = notes ? notes + ', Pending BofA2' : 'Pending BofA2';
+        }
+        if (rules.pendingChase) {
+          chase += rules.pendingChase;
+          notes = notes ? notes + ', Pending Chase' : 'Pending Chase';
+        }
+        if (rules.pendingBofA || rules.pendingBofA2 || rules.pendingChase) {
+          pendingPosted = true;
+        }
       }
     }
     
@@ -119,30 +124,34 @@ export function generateMinimumPaymentProjection(rules: ProjectionRules, maxMont
       notes = notes ? notes + ', Payday' : 'Payday';
     }
     
-    // Minimum payments on 4th of month (pay statement balance)
-    const paymentDayOfMonth = rules.paymentDay || 4;
-    if (dayOfMonth === paymentDayOfMonth) {
-      // Pay statement balances (minimum payments)
+    // Minimum payments on their respective due dates
+    // BofA - 3rd of month
+    if (dayOfMonth === (rules.bofaPaymentDay || 3)) {
       if (rules.bofaStatement && rules.bofaStatement > 0 && bofa > 0) {
         bofaPayment = Math.min(rules.bofaStatement, bofa);
         checking -= bofaPayment;
         bofa -= bofaPayment;
+        notes = notes ? notes + ', BofA Min' : 'BofA Min';
       }
-      
-      if (rules.bofa2Statement && rules.bofa2Statement > 0 && bofa2 > 0) {
-        bofa2Payment = Math.min(rules.bofa2Statement, bofa2);
-        checking -= bofa2Payment;
-        bofa2 -= bofa2Payment;
-      }
-      
+    }
+    
+    // Chase - 8th of month
+    if (dayOfMonth === (rules.chasePaymentDay || 8)) {
       if (rules.chaseStatement && rules.chaseStatement > 0 && chase > 0) {
         chasePayment = Math.min(rules.chaseStatement, chase);
         checking -= chasePayment;
         chase -= chasePayment;
+        notes = notes ? notes + ', Chase Min' : 'Chase Min';
       }
-      
-      if (bofaPayment > 0 || bofa2Payment > 0 || chasePayment > 0) {
-        notes = notes ? notes + ', Min Payments' : 'Min Payments';
+    }
+    
+    // BofA 2 - 24th of month
+    if (dayOfMonth === (rules.bofa2PaymentDay || 24)) {
+      if (rules.bofa2Statement && rules.bofa2Statement > 0 && bofa2 > 0) {
+        bofa2Payment = Math.min(rules.bofa2Statement, bofa2);
+        checking -= bofa2Payment;
+        bofa2 -= bofa2Payment;
+        notes = notes ? notes + ', BofA2 Min' : 'BofA2 Min';
       }
     }
     
@@ -226,22 +235,25 @@ export function generateProjection(rules: ProjectionRules, months: number = 4): 
     let chasePayment = 0;
     let notes = '';
     
-    // Post pending charges on day 1-2 of the projection (they post within 1-2 days)
-    if (!pendingPosted && dayOfMonth <= 2) {
-      if (rules.pendingBofA) {
-        bofa += rules.pendingBofA;
-        notes = notes ? notes + ', Pending BofA' : 'Pending BofA';
-      }
-      if (rules.pendingBofA2) {
-        bofa2 += rules.pendingBofA2;
-        notes = notes ? notes + ', Pending BofA2' : 'Pending BofA2';
-      }
-      if (rules.pendingChase) {
-        chase += rules.pendingChase;
-        notes = notes ? notes + ', Pending Chase' : 'Pending Chase';
-      }
-      if (rules.pendingBofA || rules.pendingBofA2 || rules.pendingChase) {
-        pendingPosted = true;
+    // Post pending charges within 1-2 days from start of projection
+    if (!pendingPosted) {
+      const daysSinceStart = Math.floor((current.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSinceStart >= 1 && daysSinceStart <= 2) {
+        if (rules.pendingBofA) {
+          bofa += rules.pendingBofA;
+          notes = notes ? notes + ', Pending BofA' : 'Pending BofA';
+        }
+        if (rules.pendingBofA2) {
+          bofa2 += rules.pendingBofA2;
+          notes = notes ? notes + ', Pending BofA2' : 'Pending BofA2';
+        }
+        if (rules.pendingChase) {
+          chase += rules.pendingChase;
+          notes = notes ? notes + ', Pending Chase' : 'Pending Chase';
+        }
+        if (rules.pendingBofA || rules.pendingBofA2 || rules.pendingChase) {
+          pendingPosted = true;
+        }
       }
     }
     
@@ -252,31 +264,40 @@ export function generateProjection(rules: ProjectionRules, months: number = 4): 
       notes = 'Payday';
     }
     
-    // Make credit card payments monthly (default: 4th of month)
-    // Pay the full requested amounts - allow checking to go negative to show cash flow reality
-    const paymentDayOfMonth = rules.paymentDay || 4;
-    if (dayOfMonth === paymentDayOfMonth) {
-      // Calculate payments needed (up to balance and amount specified)
-      if (rules.chasePaymentAmount && rules.chasePaymentAmount > 0 && chase > 0) {
-        chasePayment = Math.min(rules.chasePaymentAmount, chase);
-        checking -= chasePayment;
-        chase -= chasePayment;
-      }
-      
+    // Make credit card payments on their respective due dates
+    // BofA payment - 3rd of month
+    if (dayOfMonth === (rules.bofaPaymentDay || 3)) {
       if (rules.bofaPaymentAmount && rules.bofaPaymentAmount > 0 && bofa > 0) {
         bofaPayment = Math.min(rules.bofaPaymentAmount, bofa);
         checking -= bofaPayment;
         bofa -= bofaPayment;
+        notes = notes ? notes + ', BofA Payment' : 'BofA Payment';
+        if (checking < 0) {
+          notes = notes + ' ⚠️ NEGATIVE';
+        }
       }
-      
+    }
+    
+    // Chase payment - 8th of month
+    if (dayOfMonth === (rules.chasePaymentDay || 8)) {
+      if (rules.chasePaymentAmount && rules.chasePaymentAmount > 0 && chase > 0) {
+        chasePayment = Math.min(rules.chasePaymentAmount, chase);
+        checking -= chasePayment;
+        chase -= chasePayment;
+        notes = notes ? notes + ', Chase Payment' : 'Chase Payment';
+        if (checking < 0) {
+          notes = notes + ' ⚠️ NEGATIVE';
+        }
+      }
+    }
+    
+    // BofA 2 payment - 24th of month
+    if (dayOfMonth === (rules.bofa2PaymentDay || 24)) {
       if (rules.bofa2PaymentAmount && rules.bofa2PaymentAmount > 0 && bofa2 > 0) {
         bofa2Payment = Math.min(rules.bofa2PaymentAmount, bofa2);
         checking -= bofa2Payment;
         bofa2 -= bofa2Payment;
-      }
-      
-      if (chasePayment > 0 || bofaPayment > 0 || bofa2Payment > 0) {
-        notes = notes ? notes + ', CC Payments' : 'CC Payments';
+        notes = notes ? notes + ', BofA2 Payment' : 'BofA2 Payment';
         if (checking < 0) {
           notes = notes + ' ⚠️ NEGATIVE';
         }

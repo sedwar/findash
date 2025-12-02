@@ -101,6 +101,145 @@
   gap: 20px;
 }
 
+/* Cash Flow Indicator */
+.cash-flow-indicator {
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, rgba(0, 217, 255, 0.08) 100%);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.cash-flow-indicator.warning {
+  background: linear-gradient(135deg, rgba(255, 69, 58, 0.08) 0%, rgba(255, 159, 10, 0.08) 100%);
+  border-color: rgba(255, 69, 58, 0.4);
+}
+
+.cash-flow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cash-flow-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 800;
+}
+
+.cash-flow-alert {
+  font-size: 0.7rem;
+  color: #ff453a;
+  font-weight: 900;
+  padding: 4px 12px;
+  background: rgba(255, 69, 58, 0.2);
+  border-radius: 6px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.cash-flow-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cash-flow-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.cash-flow-item.first {
+  background: rgba(100, 210, 255, 0.1);
+  border-left-color: rgba(100, 210, 255, 0.6);
+}
+
+.cash-flow-item.income {
+  background: rgba(0, 255, 136, 0.08);
+  border-left-color: rgba(0, 255, 136, 0.6);
+}
+
+.cash-flow-item.payment {
+  background: rgba(255, 159, 10, 0.05);
+  border-left-color: rgba(255, 159, 10, 0.5);
+}
+
+.cash-flow-item.balance-negative {
+  background: rgba(255, 69, 58, 0.12);
+  border-left-color: rgba(255, 69, 58, 0.8);
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.cash-flow-item-label {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.amount-positive {
+  color: #00ff88;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.amount-negative {
+  color: #ff9f0a;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.cash-flow-item-value {
+  font-weight: 700;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  font-size: 1.05rem;
+}
+
+.cash-flow-item-value.positive {
+  color: #00ff88;
+}
+
+.cash-flow-item-value.negative {
+  color: #ff453a;
+  text-shadow: 0 0 10px rgba(255, 69, 58, 0.5);
+}
+
+.cash-flow-warning {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 69, 58, 0.15);
+  border: 1px solid rgba(255, 69, 58, 0.4);
+  border-radius: 8px;
+  color: #ff453a;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+}
+
 .debt-summary {
   margin-top: 32px;
   padding: 24px;
