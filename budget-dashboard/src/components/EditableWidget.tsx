@@ -149,7 +149,7 @@ function EditableWidget({ label, value, onSave, color = '#ffffff', size = 'mediu
       
       {!isEditing && onPayFull && (
         <button
-          onClick={() => onPayFull(value + (pending || 0))}
+          onClick={() => onPayFull()}
           style={{
             marginTop: '8px',
             padding: '6px 12px',
