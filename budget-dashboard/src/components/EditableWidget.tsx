@@ -11,11 +11,13 @@ interface EditableWidgetProps {
   sublabel?: string;
   showNoPending?: boolean;
   onPendingEdit?: (value: number) => void;
-  onPayFull?: (fullAmount: number) => void;
+  onPayFull?: () => void;
+  onPaidThisMonth?: () => void;
+  isPaidThisMonth?: boolean;
   isWarning?: boolean;
 }
 
-function EditableWidget({ label, value, onSave, color = '#ffffff', size = 'medium', pending, sublabel, showNoPending, onPendingEdit, onPayFull, isWarning }: EditableWidgetProps) {
+function EditableWidget({ label, value, onSave, color = '#ffffff', size = 'medium', pending, sublabel, showNoPending, onPendingEdit, onPayFull, onPaidThisMonth, isPaidThisMonth, isWarning }: EditableWidgetProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value.toString());
   const [isEditingPending, setIsEditingPending] = useState(false);
@@ -175,6 +177,39 @@ function EditableWidget({ label, value, onSave, color = '#ffffff', size = 'mediu
           title={`Pay full balance: ${formatCurrency(value + (pending || 0))}`}
         >
           💰 Pay Full
+        </button>
+      )}
+
+      {!isEditing && onPaidThisMonth && (
+        <button
+          onClick={onPaidThisMonth}
+          style={{
+            marginLeft: '8px',
+            padding: '4px 8px',
+            background: isPaidThisMonth ? 'rgba(138, 43, 226, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+            border: isPaidThisMonth ? '1px solid rgba(138, 43, 226, 0.5)' : '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '6px',
+            color: isPaidThisMonth ? '#8a2be2' : 'rgba(255, 255, 255, 0.7)',
+            fontSize: '0.7rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(138, 43, 226, 0.2)';
+            e.currentTarget.style.borderColor = 'rgba(138, 43, 226, 0.5)';
+            e.currentTarget.style.color = '#8a2be2';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = isPaidThisMonth ? 'rgba(138, 43, 226, 0.2)' : 'rgba(255, 255, 255, 0.1)';
+            e.currentTarget.style.borderColor = isPaidThisMonth ? 'rgba(138, 43, 226, 0.5)' : 'rgba(255, 255, 255, 0.2)';
+            e.currentTarget.style.color = isPaidThisMonth ? '#8a2be2' : 'rgba(255, 255, 255, 0.7)';
+          }}
+          title={isPaidThisMonth ? "Clear paid status" : "Mark as paid this month - waiting for next statement"}
+        >
+          {isPaidThisMonth ? '❌ Clear Paid' : '✅ Paid This Month'}
         </button>
       )}
       

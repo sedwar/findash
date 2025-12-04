@@ -11,6 +11,7 @@ interface AccountSummaryProps {
   projectedRows?: CashFlowRow[];
   onRulesChange?: (rules: any) => void;
   onProjectionCyclesChange?: (cycles: any[]) => void;
+  tableProjectedRows?: CashFlowRow[];
 }
 
 // LocalStorage helper functions
@@ -51,7 +52,7 @@ function saveRules(rules: any) {
   }
 }
 
-function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionCyclesChange }: AccountSummaryProps) {
+function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onRulesChange, onProjectionCyclesChange }: AccountSummaryProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFirstTime, setIsFirstTime] = useState(false);
   
@@ -64,6 +65,28 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
       case 3: return 'rd';
       default: return 'th';
     }
+  };
+
+  // Helper function to get cash balance from table on specific date
+  const getCashOnDate = (monthOffset: number, targetDay: number, excludeThisPayment: number = 0) => {
+    // Find the row for the target month and day
+    const todayDate = new Date();
+    const targetMonth = (todayDate.getMonth() + monthOffset) % 12;
+    const targetYear = todayDate.getFullYear() + Math.floor((todayDate.getMonth() + monthOffset) / 12);
+
+    const targetRow = tableProjectedRows.find(row => {
+      const rowDate = parseDate(row.date);
+      if (!rowDate) return false;
+      return rowDate.getMonth() === targetMonth &&
+             rowDate.getDate() === targetDay &&
+             rowDate.getFullYear() === targetYear;
+    });
+
+    if (targetRow) {
+      return targetRow.checking;
+    }
+
+    return checking; // Fallback to current checking
   };
   
   // Check for first-time user on mount
@@ -150,6 +173,11 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
     chasePayment: number;
   }>>([]);
 
+  // Track if cards have been paid for current month
+  const [bofaPaidThisMonth, setBofaPaidThisMonth] = useState(false);
+  const [bofa2PaidThisMonth, setBofa2PaidThisMonth] = useState(false);
+  const [chasePaidThisMonth, setChasePaidThisMonth] = useState(false);
+
 
   const today = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
@@ -182,6 +210,9 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
   // Calculate balances at each projection stage
   const [projections, setProjectionsState] = useState<any[]>([]);
 
+  // Store actual monthly spending for display
+  const [actualMonthlySpending, setActualMonthlySpending] = useState(0);
+
   // Recalculate projections whenever dependencies change
   useEffect(() => {
     // Use the same projection engine as Dashboard for consistency
@@ -189,10 +220,13 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
       checkingBalance: checking,
       // Use CURRENT balances (what's actually on the card now)
       // These include charges that have posted but aren't in statement yet
-      // ADD pending charges that will post soon (within next few days)
-      bofaBalance: bofa + pendingBofA,
-      bofa2Balance: bofa2 + pendingBofA2,
-      chaseBalance: chase + pendingChase,
+      bofaBalance: bofa,
+      bofa2Balance: bofa2,
+      chaseBalance: chase,
+      // Pending charges that will post in 1-2 days
+      pendingBofA: pendingBofA,
+      pendingBofA2: pendingBofA2,
+      pendingChase: pendingChase,
       // Statement balances for the projection
       // These represent starting point for next statement cycle
       bofaStatement: bofaStatement,
@@ -210,7 +244,11 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
     
     // Generate projections for 1 month
     const projectedRows = generateProjection(rules, 1);
-      
+
+    // Calculate actual spending for the month (not assuming 4 weeks)
+    const calculatedMonthlySpending = projectedRows.reduce((total, row) => total + row.spending, 0);
+    setActualMonthlySpending(calculatedMonthlySpending);
+
     // Extract key data for the first payment cycle
     // Get the LAST row of projections (end of month) to include all spending
     const firstMonth = projectedRows.length > 0 ? projectedRows[projectedRows.length - 1] : null;
@@ -243,12 +281,21 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
       const startingBofa2Balance = previousProjection ? previousProjection.bofa2 : bofa2Statement;
       const startingChaseBalance = previousProjection ? previousProjection.chase : chaseStatement;
       const startingChecking = previousProjection ? previousProjection.checkingBalance : checking;
-      
+
+      // Calculate start date for this cycle (one month after the first projection started)
+      const cycleStartDate = new Date();
+      cycleStartDate.setMonth(cycleStartDate.getMonth() + index + 1);
+      cycleStartDate.setDate(1); // Start of the month
+
       const cycleRules: ProjectionRules = {
         checkingBalance: startingChecking,
         bofaBalance: startingBofaBalance,
         bofa2Balance: startingBofa2Balance,
         chaseBalance: startingChaseBalance,
+        // No pending charges for future cycles (already posted)
+        pendingBofA: 0,
+        pendingBofA2: 0,
+        pendingChase: 0,
         bofaStatement: bofaStatement,
         bofa2Statement: bofa2Statement,
         chaseStatement: chaseStatement,
@@ -259,9 +306,14 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
         bofa2PaymentAmount: cycle.bofa2Payment,
         chasePaymentAmount: cycle.chasePayment,
         rentDay: 23,
-        payDayReference: new Date('2025-11-20')
+        bofaPaymentDay: 3,
+        bofa2PaymentDay: 24,
+        chasePaymentDay: 8,
+        payDayReference: new Date('2025-11-20'),
+        startDate: cycleStartDate
       };
       const cycleProjection = generateProjection(cycleRules, 1);
+      const cycleActualSpending = cycleProjection.reduce((total, row) => total + row.spending, 0);
       const cycleEndOfMonth = cycleProjection.length > 0 ? cycleProjection[cycleProjection.length - 1] : null;
       
       if (cycleEndOfMonth) {
@@ -270,13 +322,14 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
           bofa2: cycleEndOfMonth.bofa2,
           chase: cycleEndOfMonth.chase,
           checkingBalance: cycleEndOfMonth.checking,
-          payments: cycle
+          payments: cycle,
+          actualSpending: cycleActualSpending
         });
       }
       });
 
     setProjectionsState(newProjections);
-  }, [checking, bofa, bofa2, chase, bofaStatement, bofa2Statement, chaseStatement, bofaPayment, bofa2Payment, chasePayment, paycheckAmount, rent, weeklySpending, projectionCycles]);
+  }, [checking, bofa, bofa2, chase, bofaStatement, bofa2Statement, chaseStatement, bofaPayment, bofa2Payment, chasePayment, paycheckAmount, rent, weeklySpending, projectionCycles, tableProjectedRows]);
 
   const addProjectionCycle = () => {
     setProjectionCycles([...projectionCycles, {
@@ -287,8 +340,14 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
   };
 
   const updateProjectionCycle = (index: number, field: 'bofaPayment' | 'bofa2Payment' | 'chasePayment', value: number) => {
+    console.log(`💾 Updating cycle ${index} ${field} to ${value}`);
     const updated = [...projectionCycles];
+    if (!updated[index]) {
+      console.error(`❌ Cycle ${index} doesn't exist!`);
+      return;
+    }
     updated[index][field] = value;
+    console.log(`✅ Updated cycle ${index}:`, updated[index]);
     setProjectionCycles(updated);
   };
 
@@ -341,6 +400,10 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
         bofaBalance: bofa,
         bofa2Balance: bofa2,
         chaseBalance: chase,
+        // Pending charges that will post
+        pendingBofA,
+        pendingBofA2,
+        pendingChase,
         // Statement balances for reference
         bofaStatement,
         bofa2Statement,
@@ -410,6 +473,80 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
     setBofaPayment(values.bofaPayment);
     setBofa2Payment(values.bofa2Payment);
     setChasePayment(values.chasePayment);
+  };
+
+  // Helper function to parse date string (format: "24-Dec-2025")
+  const parseDate = (dateStr: string): Date | null => {
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return null;
+    
+    const day = parseInt(parts[0]);
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = monthNames.indexOf(parts[1]);
+    const year = parseInt(parts[2]);
+    
+    if (month === -1 || isNaN(day) || isNaN(year)) return null;
+    return new Date(year, month, day);
+  };
+
+  // Helper function to get the last row for a specific month from table rows
+  // CRITICAL: Only returns rows from that EXACT month, never from other months
+  const getMonthEndRow = (monthOffset: number) => {
+    const today = new Date();
+    const targetMonth = (today.getMonth() + monthOffset) % 12;
+    const targetYear = today.getFullYear() + Math.floor((today.getMonth() + monthOffset) / 12);
+    
+    // Filter rows for this SPECIFIC month and year ONLY
+    const monthRows = tableProjectedRows.filter(row => {
+      const rowDate = parseDate(row.date);
+      if (!rowDate) return false;
+      // Must be EXACTLY in target month and year
+      return rowDate.getMonth() === targetMonth && 
+             rowDate.getFullYear() === targetYear;
+    });
+    
+    // Return the last row of the month (highest day number)
+    if (monthRows.length === 0) return null;
+    
+    // Sort by date and return the last one (last day of that month)
+    monthRows.sort((a, b) => {
+      const dateA = parseDate(a.date);
+      const dateB = parseDate(b.date);
+      if (!dateA || !dateB) return 0;
+      return dateA.getTime() - dateB.getTime();
+    });
+    
+    const lastRow = monthRows[monthRows.length - 1];
+    
+    // Final verification: ensure it's from the correct month
+    const finalCheck = parseDate(lastRow.date);
+    if (finalCheck && (finalCheck.getMonth() !== targetMonth || finalCheck.getFullYear() !== targetYear)) {
+      console.error(`❌ ERROR: getMonthEndRow returned wrong month!`, {
+        requestedMonth: targetMonth,
+        requestedYear: targetYear,
+        actualMonth: finalCheck.getMonth(),
+        actualYear: finalCheck.getFullYear(),
+        rowDate: lastRow.date
+      });
+      return null;
+    }
+    
+    return lastRow;
+  };
+
+  // Helper function to calculate spending for a specific month from table rows
+  const getMonthlySpending = (monthOffset: number) => {
+    const today = new Date();
+    const targetMonth = (today.getMonth() + monthOffset) % 12;
+    const targetYear = today.getFullYear() + Math.floor((today.getMonth() + monthOffset) / 12);
+    
+    const monthRows = tableProjectedRows.filter(row => {
+      const rowDate = parseDate(row.date);
+      if (!rowDate) return false;
+      return rowDate.getMonth() === targetMonth && rowDate.getFullYear() === targetYear;
+    });
+    
+    return monthRows.reduce((total, row) => total + (row.spending || 0), 0);
   };
 
   return (
@@ -538,68 +675,95 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
             return testDate.getDay() === 4 && weeksDiff % 2 === 0;
           };
           
-          const getCashOnDate = (targetDay: number, excludeThisPayment: number = 0) => {
-            // Find the projected row for the target date in the current/next month
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
-
-            const targetRow = projectedRows.find(row => {
-              const rowDate = new Date(row.date);
-              const rowDay = rowDate.getDate();
-              const rowMonth = rowDate.getMonth();
-              const rowYear = rowDate.getFullYear();
-
-              // Look for the target day in the current month or next month
-              return rowDay === targetDay &&
-                     ((rowMonth === currentMonth && rowYear === currentYear) ||
-                      (rowMonth === (currentMonth + 1) % 12 && (rowMonth === 0 ? rowYear === currentYear + 1 : rowYear === currentYear)));
-            });
-
-            if (targetRow) {
-              // The projected row shows cash balance after all transactions up to and including this date
-              // This includes the payment for this date, so this IS the "cash after payment"
-              return targetRow.checking;
-            }
-
-            // Fallback to current checking if no projected row found
-            return checking;
-          };
-          
-          const cashAfterBofA = getCashOnDate(3);
-          const cashAfterChase = getCashOnDate(8);
-          const cashAfterBofA2 = getCashOnDate(24);
+          // Current month payments (monthOffset = 0 for December)
+          const cashAfterBofA = getCashOnDate(0, 3);
+          const cashAfterChase = getCashOnDate(0, 8);
+          const cashAfterBofA2 = getCashOnDate(0, 24);
           
           return (
             <div className="strategy-grid">
               <EditableWidget
                 label="💳 Pay BofA (Due 3rd)"
                 value={bofaPayment}
-                onSave={setBofaPayment}
+                onSave={(value) => {
+                  setBofaPayment(value);
+                  if (value > 0) setBofaPaidThisMonth(false); // Reset paid flag if setting a payment
+                }}
                 color="#ff453a"
                 size="small"
-                onPayFull={() => setBofaPayment(bofaStatement)}
+                onPayFull={() => {
+                  setBofaPayment(bofaStatement);
+                  setBofaPaidThisMonth(false); // Reset paid flag when using Pay Full
+                }}
+                onPaidThisMonth={() => {
+                  if (bofaPaidThisMonth) {
+                    // Clear paid status
+                    setBofaPaidThisMonth(false);
+                  } else {
+                    // Mark as paid
+                    setBofaPaidThisMonth(true);
+                    setBofaPayment(0);
+                  }
+                }}
+                isPaidThisMonth={bofaPaidThisMonth}
                 isWarning={cashAfterBofA < 0 && bofaPayment > 0}
-                sublabel={bofaPayment > 0 ? `After payment: $${cashAfterBofA.toFixed(2)}` : `Before payment: $${cashAfterBofA.toFixed(2)}`}
+                sublabel={bofaPayment > 0 ? `💰 Cash in checking after payment: $${cashAfterBofA.toFixed(2)}` :
+                         bofaPaidThisMonth ? `✅ Paid this month, waiting for next statement` :
+                         `💰 Cash in checking before payment: $${cashAfterBofA.toFixed(2)}`}
               />
               <EditableWidget
                 label="💳 Pay BofA 2 (Due 24th)"
                 value={bofa2Payment}
-                onSave={setBofa2Payment}
+                onSave={(value) => {
+                  setBofa2Payment(value);
+                  if (value > 0) setBofa2PaidThisMonth(false);
+                }}
                 color="#ff6b9d"
                 size="small"
-                onPayFull={() => setBofa2Payment(bofa2Statement)}
+                onPayFull={() => {
+                  setBofa2Payment(bofa2Statement);
+                  setBofa2PaidThisMonth(false);
+                }}
+                onPaidThisMonth={() => {
+                  if (bofa2PaidThisMonth) {
+                    setBofa2PaidThisMonth(false);
+                  } else {
+                    setBofa2PaidThisMonth(true);
+                    setBofa2Payment(0);
+                  }
+                }}
+                isPaidThisMonth={bofa2PaidThisMonth}
                 isWarning={cashAfterBofA2 < 0 && bofa2Payment > 0}
-                sublabel={bofa2Payment > 0 ? `After payment: $${cashAfterBofA2.toFixed(2)}` : `Before payment: $${cashAfterBofA2.toFixed(2)}`}
+                sublabel={bofa2Payment > 0 ? `💰 Cash in checking after payment: $${cashAfterBofA2.toFixed(2)}` :
+                         bofa2PaidThisMonth ? `✅ Paid this month, waiting for next statement` :
+                         `💰 Cash in checking before payment: $${cashAfterBofA2.toFixed(2)}`}
               />
               <EditableWidget
                 label="💳 Pay Chase (Due 8th)"
                 value={chasePayment}
-                onSave={setChasePayment}
+                onSave={(value) => {
+                  setChasePayment(value);
+                  if (value > 0) setChasePaidThisMonth(false);
+                }}
                 color="#ff9f0a"
                 size="small"
-                onPayFull={() => setChasePayment(chaseStatement)}
+                onPayFull={() => {
+                  setChasePayment(chaseStatement);
+                  setChasePaidThisMonth(false);
+                }}
+                onPaidThisMonth={() => {
+                  if (chasePaidThisMonth) {
+                    setChasePaidThisMonth(false);
+                  } else {
+                    setChasePaidThisMonth(true);
+                    setChasePayment(0);
+                  }
+                }}
+                isPaidThisMonth={chasePaidThisMonth}
                 isWarning={cashAfterChase < 0 && chasePayment > 0}
-                sublabel={chasePayment > 0 ? `After payment: $${cashAfterChase.toFixed(2)}` : `Before payment: $${cashAfterChase.toFixed(2)}`}
+                sublabel={chasePayment > 0 ? `💰 Cash in checking after payment: $${cashAfterChase.toFixed(2)}` :
+                         chasePaidThisMonth ? `✅ Paid this month, waiting for next statement` :
+                         `💰 Cash in checking before payment: $${cashAfterChase.toFixed(2)}`}
               />
             </div>
           );
@@ -638,84 +802,146 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
           />
         </div>
         
-        {projections.length > 0 && (
-          <>
-            <h3 style={{ marginTop: '32px' }}>AFTER PAYMENTS - {getMonthName(1).toUpperCase()} STATEMENT</h3>
-            <p style={{ 
-              fontSize: '0.85rem', 
-              color: 'rgba(255, 255, 255, 0.6)', 
-              marginBottom: '20px',
-              fontStyle: 'italic'
-            }}>
-              After first payment cycle {weeklySpending > 0 && `+ $${weeklySpending * 4}/month spending on BofA 2`}
-            </p>
-            <div className="strategy-grid">
+        {tableProjectedRows.length > 0 && (() => {
+          // "AFTER PAYMENTS - JANUARY STATEMENT" should ALWAYS show December's ending balance
+          // This is a HISTORICAL snapshot - it should NEVER change when new cycles are added
+          const today = new Date();
+          const currentMonth = today.getMonth(); // December
+          const currentYear = today.getFullYear();
+          
+          // ALWAYS use December rows ONLY - this is the historical balance
+          const decemberRowsOnly = tableProjectedRows.filter(row => {
+            const rowDate = parseDate(row.date);
+            if (!rowDate) return false;
+            // Must be EXACTLY in December (current month)
+            return rowDate.getMonth() === currentMonth && 
+                   rowDate.getFullYear() === currentYear;
+          });
+          
+          if (decemberRowsOnly.length === 0) return null;
+          
+          // Sort December rows by date and get the last one (Dec 31)
+          decemberRowsOnly.sort((a, b) => {
+            const dateA = parseDate(a.date);
+            const dateB = parseDate(b.date);
+            if (!dateA || !dateB) return 0;
+            return dateA.getTime() - dateB.getTime();
+          });
+          
+          const nextMonthRow = decemberRowsOnly[decemberRowsOnly.length - 1];
+          
+          if (!nextMonthRow) return null;
+          
+          // Final verification: ensure row is from December
+          const finalCheck = parseDate(nextMonthRow.date);
+          if (!finalCheck || finalCheck.getMonth() !== currentMonth || finalCheck.getFullYear() !== currentYear) {
+            console.error('❌ CRITICAL ERROR: Selected row is NOT from December!', {
+              selectedDate: nextMonthRow.date,
+              selectedMonth: finalCheck?.getMonth(),
+              selectedYear: finalCheck?.getFullYear(),
+              expectedMonth: currentMonth,
+              expectedYear: currentYear
+            });
+            return null; // Don't show wrong data
+          }
+
+          // Calculate spending for December ONLY (rest of current month)
+          const firstMonthSpending = decemberRowsOnly
+            .reduce((total, row) => total + (row.spending || 0), 0);
+
+          return (
+            <>
+              <h3 style={{ marginTop: '32px' }}>AFTER PAYMENTS - {getMonthName(1).toUpperCase()} STATEMENT</h3>
+              <p style={{
+                fontSize: '0.85rem',
+                color: 'rgba(255, 255, 255, 0.6)',
+                marginBottom: '20px',
+                fontStyle: 'italic'
+              }}>
+                After first payment cycle {firstMonthSpending > 0 && `+ $${firstMonthSpending.toFixed(0)}/month spending on BofA 2`}
+              </p>
+              <div className="strategy-grid">
               <EditableWidget
-                label="BofA Balance"
-                value={projections[0].bofa}
+                label="💳 BofA Card Balance"
+                value={nextMonthRow.bofa}
                 onSave={() => {}}
-                color={projections[0].bofa === 0 ? "#00ff88" : "#ff453a"}
+                color={nextMonthRow.bofa === 0 ? "#00ff88" : "#ff453a"}
                 size="small"
-                sublabel={projections[0].bofa === 0 ? "✅ PAID OFF!" : (bofaPayment > 0 ? `After $${bofaPayment} payment` : 'No payment set')}
+                sublabel={nextMonthRow.bofa === 0 ? "✅ PAID OFF!" :
+                         bofaPaidThisMonth ? "Already paid this month" :
+                         (bofaPayment > 0 ? `After $${bofaPayment} payment` : 'No payment set')}
               />
               <EditableWidget
                 label="BofA 2 Balance"
-                value={projections[0].bofa2}
+                value={nextMonthRow.bofa2}
                 onSave={() => {}}
-                color={projections[0].bofa2 === 0 ? "#00ff88" : "#ff6b9d"}
+                color={nextMonthRow.bofa2 === 0 ? "#00ff88" : "#ff6b9d"}
                 size="small"
-                sublabel={projections[0].bofa2 === 0 ? "✅ PAID OFF!" : `After $${bofa2Payment} payment + $${weeklySpending * 4} spending`}
+                sublabel={nextMonthRow.bofa2 === 0 ? "✅ PAID OFF!" :
+                         bofa2PaidThisMonth ? "Already paid this month" :
+                         `After $${bofa2Payment} payment + $${firstMonthSpending.toFixed(0)} spending`}
               />
               <EditableWidget
                 label="Chase Balance"
-                value={projections[0].chase}
+                value={nextMonthRow.chase}
                 onSave={() => {}}
-                color={projections[0].chase === 0 ? "#00ff88" : "#ff9f0a"}
+                color={nextMonthRow.chase === 0 ? "#00ff88" : "#ff9f0a"}
                 size="small"
-                sublabel={projections[0].chase === 0 ? "✅ PAID OFF!" : (chasePayment > 0 ? `After $${chasePayment} payment` : 'No payment set')}
-              />
-            </div>
-          </>
-        )}
+                sublabel={nextMonthRow.chase === 0 ? "✅ PAID OFF!" :
+                         chasePaidThisMonth ? "Already paid this month" :
+                         (chasePayment > 0 ? `After $${chasePayment} payment` : 'No payment set')}
+                />
+              </div>
+            </>
+          );
+        })()}
 
         {/* Additional Projection Cycles */}
         {projectionCycles.map((cycle, index) => {
+          // Find the ending balance for the statement month (index + 1) from the table
+          // Payments are made in month (index + 1), statement is for the same month (index + 1)
+          const monthEndRow = getMonthEndRow(index + 1);
           const projection = projections[index + 1];
-          if (!projection) return null;
+          
+          // Use table data if available, otherwise fall back to local projection
+          const displayProjection = monthEndRow || projection;
+          if (!displayProjection) return null;
+          
+          // Calculate spending for the FULL calendar month of the payment month
+          // This accounts for 4 or 5 weeks depending on how many Thursdays fall in that month
+          const today = new Date();
+          const paymentMonth = (today.getMonth() + index + 1) % 12;
+          const paymentYear = today.getFullYear() + Math.floor((today.getMonth() + index + 1) / 12);
+          const paymentMonthStart = new Date(paymentYear, paymentMonth, 1);
+          paymentMonthStart.setHours(0, 0, 0, 0);
+          const paymentMonthEnd = new Date(paymentYear, paymentMonth + 1, 0); // Last day of payment month
+          paymentMonthEnd.setHours(23, 59, 59, 999);
+          
+          // Calculate spending for the full calendar month (e.g., Jan 1 - Jan 31)
+          // CRITICAL: Only use rows from the EXACT payment month, never from other months
+          const cycleSpending = tableProjectedRows
+            .filter(row => {
+              const rowDate = parseDate(row.date);
+              if (!rowDate) return false;
+              rowDate.setHours(0, 0, 0, 0);
+              // Must be EXACTLY in payment month and year
+              return rowDate.getMonth() === paymentMonth &&
+                     rowDate.getFullYear() === paymentYear &&
+                     rowDate >= paymentMonthStart && 
+                     rowDate <= paymentMonthEnd;
+            })
+            .reduce((total, row) => total + (row.spending || 0), 0);
           
           // Calculate cash available for this future month
           const prevProjection = projections[index]; // Previous month's ending balances
           const startingChecking = prevProjection?.checkingBalance || checking;
           
-          const getCashOnDateForCycle = (targetDay: number, payment: 'bofa' | 'chase' | 'bofa2') => {
-            // Find the projected row for the target date in the future month
-            const today = new Date();
-            const targetMonth = today.getMonth() + index + 1;
-            const targetYear = today.getFullYear() + Math.floor(targetMonth / 12);
-            const adjustedMonth = targetMonth % 12;
+          // Use the same getCashOnDate function for consistency
+          // index 0 = January (monthOffset = 1), index 1 = February (monthOffset = 2), etc.
+          const cashAfterBofA = getCashOnDate(index + 1, 3);
+          const cashAfterChase = getCashOnDate(index + 1, 8);
+          const cashAfterBofA2 = getCashOnDate(index + 1, 24);
 
-            const targetRow = projectedRows.find(row => {
-              const rowDate = new Date(row.date);
-              const rowDay = rowDate.getDate();
-              const rowMonth = rowDate.getMonth();
-              const rowYear = rowDate.getFullYear();
-
-              // Look for the target day in the specific future month
-              return rowDay === targetDay && rowMonth === adjustedMonth && rowYear === targetYear;
-            });
-
-            if (targetRow) {
-              // The projected row shows cash balance after all transactions up to and including this date
-              return targetRow.checking;
-            }
-
-            // Fallback to starting checking
-            return startingChecking;
-          };
-          
-          const cashAfterBofA = getCashOnDateForCycle(3, 'bofa');
-          const cashAfterChase = getCashOnDateForCycle(8, 'chase');
-          const cashAfterBofA2 = getCashOnDateForCycle(24, 'bofa2');
           
           return (
             <div key={index}>
@@ -727,7 +953,7 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
                   onSave={(val) => updateProjectionCycle(index, 'bofaPayment', val)}
                   color="#ff453a"
                   size="small"
-                  onPayFull={() => updateProjectionCycle(index, 'bofaPayment', projections[index]?.bofa || 0)}
+                  onPayFull={() => updateProjectionCycle(index, 'bofaPayment', displayProjection.bofa)}
                   isWarning={cashAfterBofA < 0 && cycle.bofaPayment > 0}
                   sublabel={cycle.bofaPayment > 0 ? `After payment: $${cashAfterBofA.toFixed(2)}` : `Before payment: $${cashAfterBofA.toFixed(2)}`}
                 />
@@ -737,7 +963,7 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
                   onSave={(val) => updateProjectionCycle(index, 'bofa2Payment', val)}
                   color="#ff6b9d"
                   size="small"
-                  onPayFull={() => updateProjectionCycle(index, 'bofa2Payment', projections[index]?.bofa2 || 0)}
+                  onPayFull={() => updateProjectionCycle(index, 'bofa2Payment', displayProjection.bofa2)}
                   isWarning={cashAfterBofA2 < 0 && cycle.bofa2Payment > 0}
                   sublabel={cycle.bofa2Payment > 0 ? `After payment: $${cashAfterBofA2.toFixed(2)}` : `Before payment: $${cashAfterBofA2.toFixed(2)}`}
                 />
@@ -747,38 +973,38 @@ function AccountSummary({ data, projectedRows = [], onRulesChange, onProjectionC
                   onSave={(val) => updateProjectionCycle(index, 'chasePayment', val)}
                   color="#ff9f0a"
                   size="small"
-                  onPayFull={() => updateProjectionCycle(index, 'chasePayment', projections[index]?.chase || 0)}
+                  onPayFull={() => updateProjectionCycle(index, 'chasePayment', displayProjection.chase)}
                   isWarning={cashAfterChase < 0 && cycle.chasePayment > 0}
                   sublabel={cycle.chasePayment > 0 ? `After payment: $${cashAfterChase.toFixed(2)}` : `Before payment: $${cashAfterChase.toFixed(2)}`}
                 />
               </div>
 
-              <h3 style={{ marginTop: '24px' }}>AFTER PAYMENTS - {getMonthName(index + 2).toUpperCase()} STATEMENT</h3>
+              <h3 style={{ marginTop: '24px' }}>AFTER PAYMENTS - {getMonthName(index + 1).toUpperCase()} STATEMENT</h3>
               <div className="strategy-grid">
                 <EditableWidget
                   label="BofA Balance"
-                  value={projection.bofa}
+                  value={displayProjection.bofa}
                   onSave={() => {}}
-                  color={projection.bofa === 0 ? "#00ff88" : "#ff453a"}
+                  color={displayProjection.bofa === 0 ? "#00ff88" : "#ff453a"}
                   size="small"
-                  sublabel={projection.bofa === 0 ? "✅ PAID OFF!" : `After $${cycle.bofaPayment} payment`}
+                  sublabel={displayProjection.bofa === 0 ? "✅ PAID OFF!" : `After $${cycle.bofaPayment} payment`}
                 />
-                <EditableWidget
-                  label="BofA 2 Balance"
-                  value={projection.bofa2}
-                  onSave={() => {}}
-                  color={projection.bofa2 === 0 ? "#00ff88" : "#ff6b9d"}
-                  size="small"
-                  sublabel={projection.bofa2 === 0 ? "✅ PAID OFF!" : `After $${cycle.bofa2Payment} payment + $${weeklySpending * 4} spending`}
-                />
-                <EditableWidget
-                  label="Chase Balance"
-                  value={projection.chase}
-                  onSave={() => {}}
-                  color={projection.chase === 0 ? "#00ff88" : "#ff9f0a"}
-                  size="small"
-                  sublabel={projection.chase === 0 ? "✅ PAID OFF!" : `After $${cycle.chasePayment} payment`}
-                />
+              <EditableWidget
+                label="💳 BofA 2 Card Balance"
+                value={displayProjection.bofa2}
+                onSave={() => {}}
+                color={displayProjection.bofa2 === 0 ? "#00ff88" : "#ff6b9d"}
+                size="small"
+                sublabel={displayProjection.bofa2 === 0 ? "✅ PAID OFF!" : `After $${cycle.bofa2Payment} payment + $${cycleSpending.toFixed(0)} spending`}
+              />
+              <EditableWidget
+                label="💳 Chase Card Balance"
+                value={displayProjection.chase}
+                onSave={() => {}}
+                color={displayProjection.chase === 0 ? "#00ff88" : "#ff9f0a"}
+                size="small"
+                sublabel={displayProjection.chase === 0 ? "✅ PAID OFF!" : `After $${cycle.chasePayment} payment`}
+              />
               </div>
             </div>
           );

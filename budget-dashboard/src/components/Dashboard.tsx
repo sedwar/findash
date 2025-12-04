@@ -49,9 +49,6 @@ function Dashboard({ data }: DashboardProps) {
     bofa2PaymentAmount: 0,
     chasePaymentAmount: 0,
     rentDay: 23,
-    bofaPaymentDay: 3,    // BofA due on 3rd
-    bofa2PaymentDay: 24,  // BofA 2 due on 24th
-    chasePaymentDay: 8,   // Chase due on 8th
     payDayReference: new Date('2025-11-20')
   });
 
@@ -59,52 +56,206 @@ function Dashboard({ data }: DashboardProps) {
 
   // Recalculate projections whenever rules or cycles change
   useEffect(() => {
-    console.log('🔄 RECALCULATING PROJECTIONS with rules:', projectionRules, 'cycles:', projectionCycles);
     let allRows: any[] = [];
     
-    // Generate first month with base rules
-    const firstMonthRules = { ...projectionRules };
+    // Calculate first projection date range: TODAY -> end of current month
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const firstProjectionEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Last day of current month
+    firstProjectionEnd.setHours(23, 59, 59, 999);
+    
+    // Calculate next month's payment dates (for cycle 0)
+    const bofaDay = projectionRules.bofaPaymentDay || 3;
+    const chaseDay = projectionRules.chasePaymentDay || 8;
+    const bofa2Day = projectionRules.bofa2PaymentDay || 24;
+    const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+    const nextMonthBofa = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), bofaDay);
+    const nextMonthChase = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), chaseDay);
+    const nextMonthBofa2 = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), bofa2Day);
+    
+    // Generate first month: TODAY -> end of current month (Dec 3 -> Dec 31)
+    const firstMonthRules = { ...projectionRules, startDate: today };
+    
+    // Check if cycle 0 payments fall within first projection and apply them there
+    if (projectionCycles.length > 0 && projectionCycles[0]) {
+      const cycle0 = projectionCycles[0];
+      
+      // If payment date is in first projection (current month), apply it there
+      if (cycle0.bofaPayment > 0 && nextMonthBofa <= firstProjectionEnd) {
+        firstMonthRules.bofaPaymentAmount = cycle0.bofaPayment;
+      }
+      if (cycle0.chasePayment > 0 && nextMonthChase <= firstProjectionEnd) {
+        firstMonthRules.chasePaymentAmount = cycle0.chasePayment;
+      }
+      if (cycle0.bofa2Payment > 0 && nextMonthBofa2 <= firstProjectionEnd) {
+        firstMonthRules.bofa2PaymentAmount = cycle0.bofa2Payment;
+      }
+    }
+    
+    console.log('📅 First month rules:', {
+      bofa2Balance: firstMonthRules.bofa2Balance,
+      bofa2Statement: firstMonthRules.bofa2Statement,
+      pendingBofA2: firstMonthRules.pendingBofA2,
+      bofa2PaymentAmount: firstMonthRules.bofa2PaymentAmount,
+      startDate: firstMonthRules.startDate,
+      endDate: firstProjectionEnd
+    });
+    
+    // Generate projection from today to end of current month
     const firstMonthRows = generateProjection(firstMonthRules, 1);
+    
+    // Find December 24th payment row
+    const dec24Row = firstMonthRows.find(row => row.date.includes('24-Dec'));
+    if (dec24Row && dec24Row.bofa2Payment > 0) {
+      console.log('💳 Dec 24 payment:', {
+        before: dec24Row.bofa2 + dec24Row.bofa2Payment,
+        payment: dec24Row.bofa2Payment,
+        after: dec24Row.bofa2
+      });
+    }
+    
+    const firstMonthEnd = firstMonthRows[firstMonthRows.length - 1];
+    if (firstMonthEnd) {
+      console.log('📊 First month ending:', {
+        bofa2: firstMonthEnd.bofa2,
+        totalSpending: firstMonthRows.reduce((sum, r) => sum + (r.spending || 0), 0)
+      });
+    }
+    
     allRows = allRows.concat(firstMonthRows);
     
-    // Get the last row of previous month to use as starting point for next month
+    // Get ending balances from first month
     let currentEndingBalances = firstMonthRows.length > 0 ? firstMonthRows[firstMonthRows.length - 1] : null;
     
-    // Generate subsequent months based on projection cycles
+    // Generate each additional month from cycles
     projectionCycles.forEach((cycle, cycleIndex) => {
-      if (currentEndingBalances) {
-        // Calculate the start date for this cycle (one day after the previous cycle ended)
-        const cycleStartDate = new Date(currentEndingBalances.date || new Date());
-        cycleStartDate.setHours(0, 0, 0, 0);
-        // Move to the next day after previous projection ended
-        cycleStartDate.setDate(cycleStartDate.getDate() + 1);
-        
-        const cycleRules: ProjectionRules = {
-          checkingBalance: currentEndingBalances.checking,
-          bofaBalance: currentEndingBalances.bofa,
-          bofa2Balance: currentEndingBalances.bofa2,
-          chaseBalance: currentEndingBalances.chase,
-          bofaStatement: projectionRules.bofaStatement,
-          bofa2Statement: projectionRules.bofa2Statement,
-          chaseStatement: projectionRules.chaseStatement,
-          paycheckAmount: projectionRules.paycheckAmount,
-          rent: projectionRules.rent,
-          weeklySpending: projectionRules.weeklySpending,
-          bofaPaymentAmount: cycle.bofaPayment,
-          bofa2PaymentAmount: cycle.bofa2Payment,
-          chasePaymentAmount: cycle.chasePayment,
-          rentDay: projectionRules.rentDay,
-          bofaPaymentDay: projectionRules.bofaPaymentDay,
-          bofa2PaymentDay: projectionRules.bofa2PaymentDay,
-          chasePaymentDay: projectionRules.chasePaymentDay,
-          payDayReference: projectionRules.payDayReference,
-          startDate: cycleStartDate
-        };
-        const cycleRows = generateProjection(cycleRules, 1);
-        allRows = allRows.concat(cycleRows);
-        
-        currentEndingBalances = cycleRows.length > 0 ? cycleRows[cycleRows.length - 1] : currentEndingBalances;
+      if (!currentEndingBalances) return;
+      
+      // Find last row to determine next month start date
+      const lastRow = allRows[allRows.length - 1];
+      const dateParts = lastRow.date.split('-');
+      if (dateParts.length !== 3) return;
+      
+      const day = parseInt(dateParts[0]);
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const month = monthNames.indexOf(dateParts[1]);
+      const year = parseInt(dateParts[2]);
+      if (month === -1 || isNaN(day) || isNaN(year)) return;
+      
+      // Start cycle from the FIRST day of the target month (full calendar month)
+      // Cycle 0 = January (month + 1), Cycle 1 = February (month + 2), etc.
+      const targetMonth = (today.getMonth() + cycleIndex + 1) % 12;
+      const targetYear = today.getFullYear() + Math.floor((today.getMonth() + cycleIndex + 1) / 12);
+      const cycleStartDate = new Date(targetYear, targetMonth, 1); // First day of target month
+      cycleStartDate.setHours(0, 0, 0, 0);
+      
+      // End cycle on the LAST day of the target month (full calendar month)
+      const cycleEndDate = new Date(targetYear, targetMonth + 1, 0); // Last day of target month
+      cycleEndDate.setHours(23, 59, 59, 999);
+      
+      // Only apply payments that fall in this cycle's month
+      const cycleMonth = cycleStartDate.getMonth();
+      const cycleYear = cycleStartDate.getFullYear();
+      
+      const cycleBofaDate = new Date(cycleYear, cycleMonth, bofaDay);
+      const cycleChaseDate = new Date(cycleYear, cycleMonth, chaseDay);
+      const cycleBofa2Date = new Date(cycleYear, cycleMonth, bofa2Day);
+      
+      // Check if payment was already applied in first projection
+      const wasBofaInFirst = cycleIndex === 0 && cycle.bofaPayment > 0 && nextMonthBofa <= firstProjectionEnd;
+      const wasChaseInFirst = cycleIndex === 0 && cycle.chasePayment > 0 && nextMonthChase <= firstProjectionEnd;
+      const wasBofa2InFirst = cycleIndex === 0 && cycle.bofa2Payment > 0 && nextMonthBofa2 <= firstProjectionEnd;
+      
+      console.log(`🔍 Cycle ${cycleIndex + 1} payment checks:`, {
+        cycleBofa2Date: cycleBofa2Date.toDateString(),
+        cycleStartDate: cycleStartDate.toDateString(),
+        cycleEndDate: cycleEndDate.toDateString(),
+        paymentAmount: cycle.bofa2Payment,
+        inRange: cycleBofa2Date >= cycleStartDate && cycleBofa2Date <= cycleEndDate,
+        wasInFirst: wasBofa2InFirst
+      });
+      
+      // Apply payment only if it falls in this cycle AND wasn't already applied in first projection
+      let bofaPaymentAmount = 0;
+      let chasePaymentAmount = 0;
+      let bofa2PaymentAmount = 0;
+      
+      if (cycle.bofaPayment > 0 && cycleBofaDate >= cycleStartDate && cycleBofaDate <= cycleEndDate && !wasBofaInFirst) {
+        bofaPaymentAmount = cycle.bofaPayment;
       }
+      if (cycle.chasePayment > 0 && cycleChaseDate >= cycleStartDate && cycleChaseDate <= cycleEndDate && !wasChaseInFirst) {
+        chasePaymentAmount = cycle.chasePayment;
+      }
+      if (cycle.bofa2Payment > 0 && cycleBofa2Date >= cycleStartDate && cycleBofa2Date <= cycleEndDate && !wasBofa2InFirst) {
+        bofa2PaymentAmount = cycle.bofa2Payment;
+        console.log(`✅ Applying BofA2 payment: ${bofa2PaymentAmount} on ${cycleBofa2Date.toDateString()}`);
+      } else if (cycle.bofa2Payment > 0) {
+        console.log(`❌ NOT applying BofA2 payment:`, {
+          inRange: cycleBofa2Date >= cycleStartDate && cycleBofa2Date <= cycleEndDate,
+          wasInFirst: wasBofa2InFirst,
+          payment: cycle.bofa2Payment
+        });
+      }
+      
+      const cycleRules: ProjectionRules = {
+        checkingBalance: currentEndingBalances.checking,
+        bofaBalance: currentEndingBalances.bofa,
+        bofa2Balance: currentEndingBalances.bofa2,
+        chaseBalance: currentEndingBalances.chase,
+        // No pending charges for future cycles - they've already been posted
+        pendingBofA: 0,
+        pendingBofA2: 0,
+        pendingChase: 0,
+        bofaStatement: projectionRules.bofaStatement,
+        bofa2Statement: projectionRules.bofa2Statement,
+        chaseStatement: projectionRules.chaseStatement,
+        paycheckAmount: projectionRules.paycheckAmount,
+        rent: projectionRules.rent,
+        weeklySpending: projectionRules.weeklySpending,
+        bofaPaymentAmount: bofaPaymentAmount,
+        bofa2PaymentAmount: bofa2PaymentAmount,
+        chasePaymentAmount: chasePaymentAmount,
+        rentDay: projectionRules.rentDay,
+        bofaPaymentDay: projectionRules.bofaPaymentDay,
+        bofa2PaymentDay: projectionRules.bofa2PaymentDay,
+        chasePaymentDay: projectionRules.chasePaymentDay,
+        payDayReference: projectionRules.payDayReference,
+        startDate: cycleStartDate
+      };
+      
+      console.log(`🔢 Cycle ${cycleIndex + 1} starting balances:`, {
+        bofa2: currentEndingBalances.bofa2,
+        payment: bofa2PaymentAmount,
+        weeklySpending: projectionRules.weeklySpending
+      });
+      
+      const cycleRows = generateProjection(cycleRules, 1);
+      
+      // Find the row with the payment to verify math
+      const paymentRow = cycleRows.find(row => row.bofa2Payment > 0);
+      if (paymentRow) {
+        console.log(`💳 Payment row (${paymentRow.date}):`, {
+          beforePayment: paymentRow.bofa2 + paymentRow.bofa2Payment,
+          payment: paymentRow.bofa2Payment,
+          afterPayment: paymentRow.bofa2
+        });
+      }
+      
+      // Find last row to see ending balance
+      const lastCycleRow = cycleRows[cycleRows.length - 1];
+      if (lastCycleRow) {
+        const totalSpending = cycleRows.reduce((sum, row) => sum + (row.spending || 0), 0);
+        console.log(`📊 Cycle ${cycleIndex + 1} ending:`, {
+          starting: currentEndingBalances.bofa2,
+          totalSpending,
+          payment: bofa2PaymentAmount,
+          expected: currentEndingBalances.bofa2 + totalSpending - bofa2PaymentAmount,
+          actual: lastCycleRow.bofa2
+        });
+      }
+      
+      allRows = allRows.concat(cycleRows);
+      currentEndingBalances = cycleRows.length > 0 ? cycleRows[cycleRows.length - 1] : currentEndingBalances;
     });
     
     // Convert projection format to CashFlowRow format
@@ -170,7 +321,7 @@ function Dashboard({ data }: DashboardProps) {
 
   return (
     <div className="dashboard">
-      <AccountSummary data={data} projectedRows={projectedRows} onRulesChange={handleRulesChange} onProjectionCyclesChange={handleProjectionCyclesChange} />
+      <AccountSummary data={data} tableProjectedRows={projectedRows} onRulesChange={handleRulesChange} onProjectionCyclesChange={handleProjectionCyclesChange} />
       
       {/* Charts */}
       <div className="charts-section-compact">

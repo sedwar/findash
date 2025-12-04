@@ -201,10 +201,28 @@ export function generateProjection(rules: ProjectionRules, months: number = 4): 
   const rows: ProjectionRow[] = [];
   const today = rules.startDate ? new Date(rules.startDate) : new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   // Calculate projection end date
-  const endDate = new Date(today);
-  endDate.setMonth(endDate.getMonth() + months);
+  let endDate: Date;
+  if (months === 1) {
+    if (rules.startDate) {
+      // If startDate is provided, project to end of that month
+      const startDate = new Date(rules.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      
+      // Always go to end of the start month (whether starting on 1st or mid-month)
+      endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+      endDate.setHours(23, 59, 59, 999);
+    } else {
+      // No startDate: generate 31 days from today
+      endDate = new Date(today);
+      endDate.setDate(today.getDate() + 30); // 31 days total (including start day)
+    }
+  } else {
+    endDate = new Date(today);
+    endDate.setMonth(endDate.getMonth() + months);
+  }
+
   
   // Running balances
   let checking = rules.checkingBalance;
@@ -339,7 +357,7 @@ export function generateProjection(rules: ProjectionRules, months: number = 4): 
       notes
     });
   }
-  
+
   return rows;
 }
 
