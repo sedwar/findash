@@ -629,7 +629,7 @@ function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onR
           label="Chase"
           value={chase}
           onSave={setChase}
-          color={chase === 0 ? "#00ff88" : "#ff3b30"}
+          color={chase === 0 ? "#00ff88" : "#ff9f0a"}
           pending={pendingChase > 0 ? pendingChase : undefined}
           onPendingEdit={setPendingChase}
           sublabel={chase === 0 ? "✅ PAID OFF!" : "⚠️ ACCRUING INTEREST"}
@@ -663,7 +663,7 @@ function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onR
           />
         </div>
         
-        <h3 style={{ marginTop: '32px' }}>PAYMENT STRATEGY (Monthly - 4th)</h3>
+        <h3 style={{ marginTop: '32px' }}>PAYMENT STRATEGY</h3>
         {(() => {
           // Calculate cash available on each due date
           const today = new Date();
@@ -689,7 +689,7 @@ function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onR
                   setBofaPayment(value);
                   if (value > 0) setBofaPaidThisMonth(false); // Reset paid flag if setting a payment
                 }}
-                color="#ff453a"
+                color={bofaStatement === 0 ? "#00ff88" : "#ff453a"}
                 size="small"
                 onPayFull={() => {
                   setBofaPayment(bofaStatement);
@@ -707,7 +707,8 @@ function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onR
                 }}
                 isPaidThisMonth={bofaPaidThisMonth}
                 isWarning={cashAfterBofA < 0 && bofaPayment > 0}
-                sublabel={bofaPayment > 0 ? `💰 Cash in checking after payment: $${cashAfterBofA.toFixed(2)}` :
+                sublabel={bofaStatement === 0 ? "✅ Card is paid off - no payment needed" :
+                         bofaPayment > 0 ? `💰 Cash in checking after payment: $${cashAfterBofA.toFixed(2)}` :
                          bofaPaidThisMonth ? `✅ Paid this month, waiting for next statement` :
                          `💰 Cash in checking before payment: $${cashAfterBofA.toFixed(2)}`}
               />
@@ -718,7 +719,7 @@ function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onR
                   setBofa2Payment(value);
                   if (value > 0) setBofa2PaidThisMonth(false);
                 }}
-                color="#ff6b9d"
+                color={bofa2Statement === 0 ? "#00ff88" : "#ff6b9d"}
                 size="small"
                 onPayFull={() => {
                   setBofa2Payment(bofa2Statement);
@@ -734,7 +735,8 @@ function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onR
                 }}
                 isPaidThisMonth={bofa2PaidThisMonth}
                 isWarning={cashAfterBofA2 < 0 && bofa2Payment > 0}
-                sublabel={bofa2Payment > 0 ? `💰 Cash in checking after payment: $${cashAfterBofA2.toFixed(2)}` :
+                sublabel={bofa2Statement === 0 ? "✅ Card is paid off - no payment needed" :
+                         bofa2Payment > 0 ? `💰 Cash in checking after payment: $${cashAfterBofA2.toFixed(2)}` :
                          bofa2PaidThisMonth ? `✅ Paid this month, waiting for next statement` :
                          `💰 Cash in checking before payment: $${cashAfterBofA2.toFixed(2)}`}
               />
@@ -745,7 +747,7 @@ function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onR
                   setChasePayment(value);
                   if (value > 0) setChasePaidThisMonth(false);
                 }}
-                color="#ff9f0a"
+                color={chaseStatement === 0 ? "#00ff88" : "#ff9f0a"}
                 size="small"
                 onPayFull={() => {
                   setChasePayment(chaseStatement);
@@ -761,7 +763,8 @@ function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onR
                 }}
                 isPaidThisMonth={chasePaidThisMonth}
                 isWarning={cashAfterChase < 0 && chasePayment > 0}
-                sublabel={chasePayment > 0 ? `💰 Cash in checking after payment: $${cashAfterChase.toFixed(2)}` :
+                sublabel={chaseStatement === 0 ? "✅ Card is paid off - no payment needed" :
+                         chasePayment > 0 ? `💰 Cash in checking after payment: $${cashAfterChase.toFixed(2)}` :
                          chasePaidThisMonth ? `✅ Paid this month, waiting for next statement` :
                          `💰 Cash in checking before payment: $${cashAfterChase.toFixed(2)}`}
               />
@@ -783,21 +786,21 @@ function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onR
             label="BofA Statement"
             value={bofaStatement}
             onSave={setBofaStatement}
-            color="#ff453a"
+            color={bofaStatement === 0 ? "#00ff88" : "#ff453a"}
             size="small"
           />
           <EditableWidget
             label="BofA 2 Statement"
             value={bofa2Statement}
             onSave={setBofa2Statement}
-            color="#ff6b9d"
+            color={bofa2Statement === 0 ? "#00ff88" : "#ff6b9d"}
             size="small"
           />
           <EditableWidget
             label="Chase Statement"
             value={chaseStatement}
             onSave={setChaseStatement}
-            color="#ff9f0a"
+            color={chaseStatement === 0 ? "#00ff88" : "#ff9f0a"}
             size="small"
           />
         </div>
@@ -951,31 +954,34 @@ function AccountSummary({ data, projectedRows = [], tableProjectedRows = [], onR
                   label={`💳 Pay BofA (Due 3rd)`}
                   value={cycle.bofaPayment}
                   onSave={(val) => updateProjectionCycle(index, 'bofaPayment', val)}
-                  color="#ff453a"
+                  color={bofaStatement === 0 ? "#00ff88" : "#ff453a"}
                   size="small"
                   onPayFull={() => updateProjectionCycle(index, 'bofaPayment', displayProjection.bofa)}
                   isWarning={cashAfterBofA < 0 && cycle.bofaPayment > 0}
-                  sublabel={cycle.bofaPayment > 0 ? `After payment: $${cashAfterBofA.toFixed(2)}` : `Before payment: $${cashAfterBofA.toFixed(2)}`}
+                  sublabel={bofaStatement === 0 ? "✅ Card is paid off - no payment needed" :
+                           cycle.bofaPayment > 0 ? `After payment: $${cashAfterBofA.toFixed(2)}` : `Before payment: $${cashAfterBofA.toFixed(2)}`}
                 />
                 <EditableWidget
                   label={`💳 Pay BofA 2 (Due 24th)`}
                   value={cycle.bofa2Payment}
                   onSave={(val) => updateProjectionCycle(index, 'bofa2Payment', val)}
-                  color="#ff6b9d"
+                  color={bofa2Statement === 0 ? "#00ff88" : "#ff6b9d"}
                   size="small"
                   onPayFull={() => updateProjectionCycle(index, 'bofa2Payment', displayProjection.bofa2)}
                   isWarning={cashAfterBofA2 < 0 && cycle.bofa2Payment > 0}
-                  sublabel={cycle.bofa2Payment > 0 ? `After payment: $${cashAfterBofA2.toFixed(2)}` : `Before payment: $${cashAfterBofA2.toFixed(2)}`}
+                  sublabel={bofa2Statement === 0 ? "✅ Card is paid off - no payment needed" :
+                           cycle.bofa2Payment > 0 ? `After payment: $${cashAfterBofA2.toFixed(2)}` : `Before payment: $${cashAfterBofA2.toFixed(2)}`}
                 />
                 <EditableWidget
                   label={`💳 Pay Chase (Due 8th)`}
                   value={cycle.chasePayment}
                   onSave={(val) => updateProjectionCycle(index, 'chasePayment', val)}
-                  color="#ff9f0a"
+                  color={chaseStatement === 0 ? "#00ff88" : "#ff9f0a"}
                   size="small"
                   onPayFull={() => updateProjectionCycle(index, 'chasePayment', displayProjection.chase)}
                   isWarning={cashAfterChase < 0 && cycle.chasePayment > 0}
-                  sublabel={cycle.chasePayment > 0 ? `After payment: $${cashAfterChase.toFixed(2)}` : `Before payment: $${cashAfterChase.toFixed(2)}`}
+                  sublabel={chaseStatement === 0 ? "✅ Card is paid off - no payment needed" :
+                           cycle.chasePayment > 0 ? `After payment: $${cashAfterChase.toFixed(2)}` : `Before payment: $${cashAfterChase.toFixed(2)}`}
                 />
               </div>
 
