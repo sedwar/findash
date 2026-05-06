@@ -6,6 +6,91 @@ import type { AppConfig } from './types';
 
 const STORAGE_KEY = 'finDash_v2_settings';
 const BALANCE_KEY = 'finDash_v2_balances';
+const OVERRIDES_KEY = 'finDash_v2_overrides';
+const PAID_CYCLES_KEY = 'finDash_v2_paidCycles';
+
+// All localStorage keys the app uses — kept in one place so seeding/export stays in sync.
+const STATE_KEYS = {
+  settings: STORAGE_KEY,
+  balances: BALANCE_KEY,
+  overrides: OVERRIDES_KEY,
+  paidCycles: PAID_CYCLES_KEY,
+} as const;
+
+type StateFile = {
+  settings: unknown;
+  balances: unknown;
+  overrides: unknown;
+  paidCycles: unknown;
+};
+
+// Seed localStorage from the bundled state.json. Only writes keys that aren't
+// already present locally — the file acts as the baseline for fresh devices,
+// not a forced override of in-session edits.
+async function seedFromStateFile(): Promise<void> {
+  try {
+    const resp = await fetch('/state.json', { cache: 'no-store' });
+    if (!resp.ok) return;
+    const file = (await resp.json()) as StateFile;
+    for (const [section, key] of Object.entries(STATE_KEYS) as [keyof StateFile, string][]) {
+      const val = file[section];
+      if (val !== null && val !== undefined && localStorage.getItem(key) === null) {
+        localStorage.setItem(key, JSON.stringify(val));
+      }
+    }
+  } catch {
+    /* state.json is optional — first-time setups won't have one */
+  }
+}
+
+// Pull current localStorage state out. In local dev (Vite middleware available),
+// POST it straight to public/state.json on disk. Otherwise fall back to a
+// browser download — the only thing a deployed page in Safari/Chrome can do.
+async function exportStateFile(): Promise<void> {
+  const out: StateFile = { settings: null, balances: null, overrides: null, paidCycles: null };
+  for (const [section, key] of Object.entries(STATE_KEYS) as [keyof StateFile, string][]) {
+    const raw = localStorage.getItem(key);
+    if (raw) {
+      try { out[section] = JSON.parse(raw); } catch { /* skip malformed */ }
+    }
+  }
+  const body = JSON.stringify(out, null, 2);
+
+  // Try the dev-only Vite middleware first. If we're not in dev, this will
+  // 404 or fail and we drop into the download path.
+  try {
+    const resp = await fetch('/__save_state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      alert(`✓ Wrote state.json directly to disk:\n${data.path}`);
+      return;
+    }
+  } catch {
+    /* fall through to download */
+  }
+
+  // Production / phone fallback — download the file so you can drop it into
+  // public/state.json yourself and commit/deploy.
+  const blob = new Blob([body], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'state.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Wipe localStorage and re-seed from the bundled state.json. Used by the
+// "Sync from deployed state" button so a stale device can pick up new pushes.
+async function forceSyncFromStateFile(): Promise<void> {
+  for (const key of Object.values(STATE_KEYS)) localStorage.removeItem(key);
+  await seedFromStateFile();
+  window.location.reload();
+}
 
 const BALANCE_FIELDS = ['checking', 'bofaBalance', 'chaseBalance', 'bofa2Balance', 'bofaPending', 'chasePending', 'bofa2Pending', 'bofaStatement', 'chaseStatement', 'bofa2Statement'] as const;
 
@@ -91,6 +176,9 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
+        // Seed localStorage from public/state.json on fresh devices before reading any keys.
+        await seedFromStateFile();
+
         const resp = await fetch('/budget.xlsx');
         const buf = await resp.arrayBuffer();
         const wb = XLSX.read(buf, { type: 'array' });
@@ -164,7 +252,12 @@ function App() {
 
   return (
     <div className="app">
-      <Dashboard config={config} onUpdate={handleUpdate} />
+      <Dashboard
+        config={config}
+        onUpdate={handleUpdate}
+        onExportState={exportStateFile}
+        onSyncState={forceSyncFromStateFile}
+      />
     </div>
   );
 }

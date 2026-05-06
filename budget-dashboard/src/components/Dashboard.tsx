@@ -60,9 +60,11 @@ function savePaidCycles(p: PaidCycles) {
 interface Props {
   config: AppConfig;
   onUpdate: (updates: Partial<AppConfig>) => void;
+  onExportState: () => void | Promise<void>;
+  onSyncState: () => void | Promise<void>;
 }
 
-export default function Dashboard({ config, onUpdate }: Props) {
+export default function Dashboard({ config, onUpdate, onExportState, onSyncState }: Props) {
   const [totalMonths, setTotalMonths] = useState(6);
   const [overrides, setOverrides] = useState<DailyOverrides>(loadOverrides);
   const [paidCycles, setPaidCycles] = useState<PaidCycles>(loadPaidCycles);
@@ -136,14 +138,34 @@ export default function Dashboard({ config, onUpdate }: Props) {
     <div className="dashboard">
       <header className="header">
         <h1>Financial Dashboard</h1>
-        {Object.keys(overrides).length > 0 && (
+        <div className="header-actions">
+          {Object.keys(overrides).length > 0 && (
+            <button
+              className="clear-overrides-btn"
+              onClick={() => { setOverrides({}); saveOverrides({}); }}
+            >
+              Clear {Object.keys(overrides).length} override{Object.keys(overrides).length !== 1 ? 's' : ''}
+            </button>
+          )}
           <button
-            className="clear-overrides-btn"
-            onClick={() => { setOverrides({}); saveOverrides({}); }}
+            className="state-action-btn"
+            onClick={onExportState}
+            title="Download current state as state.json — drop into public/ and deploy"
           >
-            Clear {Object.keys(overrides).length} override{Object.keys(overrides).length !== 1 ? 's' : ''}
+            ⬇ Export state
           </button>
-        )}
+          <button
+            className="state-action-btn state-sync-btn"
+            onClick={() => {
+              if (confirm('This will wipe local edits and reload state.json from the deployed site. Continue?')) {
+                onSyncState();
+              }
+            }}
+            title="Reset local state and re-pull from public/state.json"
+          >
+            ⟳ Sync from server
+          </button>
+        </div>
       </header>
 
       <BalanceSummary config={config} onUpdate={onUpdate} paidThisCycle={paidThisCycle} />

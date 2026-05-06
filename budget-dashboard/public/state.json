@@ -1,0 +1,173 @@
+{
+  "settings": {
+    "savings": 16000.14,
+    "bofaPayment": 0,
+    "chasePayment": 174.07,
+    "bofa2Payment": 22125.73,
+    "bofaDueDay": 3,
+    "chaseDueDay": 8,
+    "bofa2DueDay": 24,
+    "paycheckAmount": 3850,
+    "paycheckOverride": 3000,
+    "paycheckOverrideUntil": "2026-05-08",
+    "payDayReference": "2025-11-20",
+    "rent": 1938,
+    "rentDay": 0,
+    "weeklySpending": 200
+  },
+  "balances": {
+    "checking": 1507.14,
+    "bofaBalance": 16648.03,
+    "chaseBalance": 249.05,
+    "bofa2Balance": 23874.74,
+    "bofaPending": 0,
+    "chasePending": 25,
+    "bofa2Pending": 10.5,
+    "bofaStatement": 10000,
+    "chaseStatement": 249.05,
+    "bofa2Statement": 23496
+  },
+  "overrides": {
+    "2026-04-08": {
+      "chasePayment": 174.07
+    },
+    "2026-04-24": {
+      "bofa2Payment": 500,
+      "bofaPayment": 0
+    },
+    "2026-05-24": {
+      "bofa2Payment": 0,
+      "bofaPayment": 0,
+      "paycheck": 0
+    },
+    "2026-05-03": {
+      "bofaPayment": 0,
+      "paycheck": 5000
+    },
+    "2026-06-03": {
+      "bofaPayment": 448.03
+    },
+    "2026-06-05": {
+      "bofaPayment": 0
+    },
+    "2026-06-04": {
+      "bofaPayment": 0,
+      "bofa2Payment": 3000
+    },
+    "2026-05-07": {
+      "bofaPayment": 0,
+      "chasePayment": 0,
+      "bofa2Payment": 2000
+    },
+    "2026-05-04": {
+      "bofaPayment": 0,
+      "bofa2Payment": 3000
+    },
+    "2026-06-24": {
+      "bofa2Payment": 2500,
+      "rent": 0,
+      "bofaPayment": 0
+    },
+    "2026-04-23": {
+      "bofaPayment": 0,
+      "bofa2Payment": 0,
+      "paycheck": 0
+    },
+    "2026-06-18": {
+      "bofaPayment": 0,
+      "bofa2Payment": 0
+    },
+    "2026-07-24": {
+      "bofa2Payment": 0
+    },
+    "2026-07-23": {
+      "bofa2Payment": 0
+    },
+    "2026-08-24": {
+      "bofa2Payment": 2000,
+      "bofaPayment": 0
+    },
+    "2026-09-24": {
+      "bofa2Payment": 6785.24,
+      "bofaPayment": 0
+    },
+    "2026-10-24": {
+      "bofa2Payment": 800,
+      "rent": 0,
+      "bofaPayment": 5500
+    },
+    "2026-07-02": {
+      "bofaPayment": 0
+    },
+    "2026-07-09": {
+      "chasePayment": 0
+    },
+    "2026-05-21": {
+      "bofaPayment": 0,
+      "bofa2Payment": 3500
+    },
+    "2026-07-16": {
+      "bofa2Payment": 0
+    },
+    "2026-08-13": {
+      "bofa2Payment": 0
+    },
+    "2026-09-10": {
+      "bofa2Payment": 0
+    },
+    "2026-04-10": {
+      "bofaPayment": 2000
+    },
+    "2026-05-08": {
+      "chasePayment": 249.05,
+      "bofaPayment": 0,
+      "bofa2Payment": 0,
+      "paycheck": 0
+    },
+    "2026-07-03": {
+      "bofaPayment": 500,
+      "bofa2Payment": 2500
+    },
+    "2026-08-03": {
+      "bofaPayment": 1000,
+      "bofa2Payment": 1000
+    },
+    "2026-07-30": {
+      "bofa2Payment": 4000
+    },
+    "2026-09-03": {
+      "bofaPayment": 2500,
+      "bofa2Payment": 0
+    },
+    "2026-11-24": {
+      "bofa2Payment": 1000,
+      "bofaPayment": 3500
+    },
+    "2026-05-28": {
+      "bofa2Payment": 0,
+      "bofaPayment": 0
+    },
+    "2026-06-08": {
+      "paycheck": 0
+    },
+    "2026-05-14": {
+      "paycheck": 0
+    },
+    "2026-04-30": {
+      "spending": 0,
+      "rent": 0
+    }
+  },
+  "paidCycles": {
+    "bofa": {
+      "2026-04": 0,
+      "2026-05": 0
+    },
+    "chase": {
+      "2026-04": 0
+    },
+    "bofa2": {
+      "2026-04": 0
+    }
+  }
+}

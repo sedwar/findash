@@ -1384,6 +1384,39 @@ button, .editable-val, .editable-zero, .breakdown-edit, .inline-edit-btn,
   border-color: rgba(255, 69, 58, 0.5);
 }
 
+.header-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.state-action-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.55);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+
+.state-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.state-sync-btn:hover {
+  border-color: rgba(0, 217, 255, 0.4);
+  color: #00d9ff;
+}
+
 .col-date-th {
   text-align: left !important;
 }
