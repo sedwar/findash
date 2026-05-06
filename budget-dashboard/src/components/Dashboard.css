@@ -1,310 +1,1823 @@
+/* ── iOS Safari baseline ──────────────────────────────────────────────── */
+
+/* Kill the default blue tap flash on buttons and tappable elements */
+button, .editable-val, .editable-zero, .breakdown-edit, .inline-edit-btn,
+.balance-amount-edit, .clear-row-btn, .range-btn {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Momentum scrolling on horizontal table scroll containers */
+.table-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+}
+
+/* Prevent iOS Safari from zooming on input focus.
+   Only applies on touch devices to avoid bloating desktop input sizes. */
+@media (hover: none) and (pointer: coarse) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+
 .dashboard {
-  max-width: 1600px;
+  max-width: 1400px;
   margin: 0 auto;
+  padding: 0 40px 80px;
+  /* Respect iPhone notch & home indicator */
+  padding-left: max(40px, env(safe-area-inset-left));
+  padding-right: max(40px, env(safe-area-inset-right));
+  padding-bottom: max(80px, env(safe-area-inset-bottom));
   position: relative;
   z-index: 5;
 }
 
-.charts-section {
-  padding: 0 48px 40px;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0;
+  margin-bottom: 32px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.header h1 {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 20px;
+}
+
+/* ── Balance Summary Cards ───────────────────────────────────────────── */
+
+.balance-summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.balance-summary .card-balance {
+  padding: 20px 24px;
+}
+
+.card-balance .balance-amount {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+}
+
+.card-breakdown {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.breakdown-label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.breakdown-value {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.breakdown-row.pending .breakdown-label {
+  color: rgba(255, 159, 10, 0.6);
+}
+
+.pending-val {
+  color: #ff9f0a !important;
+}
+
+.breakdown-edit {
+  background: none;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: inherit;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.breakdown-edit:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pending-edit {
+  color: #ff9f0a !important;
+}
+
+.card-bal-edit {
+  font-size: 1.4rem !important;
+}
+
+.balance-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.balance-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.balance-card.savings {
+  border-color: rgba(255, 215, 0, 0.25);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.06) 0%, rgba(255, 180, 0, 0.03) 100%);
+}
+
+.savings-amount { color: #ffd700 !important; }
+
+.balance-card.checking {
+  border-color: rgba(0, 255, 136, 0.3);
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.06) 0%, rgba(0, 217, 255, 0.04) 100%);
+}
+
+.balance-card.debt {
+  border-color: rgba(255, 159, 10, 0.2);
+}
+
+.balance-card.net {
+  border-color: rgba(138, 43, 226, 0.3);
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.06) 0%, rgba(75, 0, 130, 0.04) 100%);
+}
+
+.balance-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.balance-amount {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: -0.5px;
+}
+
+.balance-amount.pos { color: #00ff88; text-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+.balance-amount.neg { color: #ff9f0a; }
+
+.balance-amount-edit {
+  background: none;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 1.8rem;
+  font-weight: 900;
+  font-family: inherit;
+  padding: 2px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: block;
+  margin: 0 auto;
+  letter-spacing: -0.5px;
+}
+
+.balance-amount-edit:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.balance-amount-edit.neg { color: #ff9f0a; }
+
+.balance-sub {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: 4px;
+}
+
+.payment-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.payment-label {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.inline-edit-btn {
+  background: rgba(0, 217, 255, 0.08);
+  border: 1px solid rgba(0, 217, 255, 0.2);
+  color: #00d9ff;
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.inline-edit-btn:hover {
+  background: rgba(0, 217, 255, 0.15);
+  border-color: rgba(0, 217, 255, 0.4);
+  box-shadow: 0 0 15px rgba(0, 217, 255, 0.15);
+}
+
+.inline-edit {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 217, 255, 0.5);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  width: 90px;
+  text-align: center;
+  outline: none;
+  box-shadow: 0 0 15px rgba(0, 217, 255, 0.15);
+}
+
+/* Match edit input to the button it replaces */
+.inline-edit.balance-amount-edit-editing {
+  font-size: 1.8rem;
+  font-weight: 900;
+  width: 100%;
+  max-width: 220px;
+  padding: 4px 12px;
+  letter-spacing: -0.5px;
+  display: block;
+  margin: 0 auto;
+}
+
+.inline-edit.card-bal-edit-editing {
+  font-size: 1.4rem;
+  font-weight: 900;
+  width: 100%;
+  max-width: 180px;
+  padding: 4px 10px;
+  display: block;
+  margin: 0 auto;
+}
+
+.inline-edit.breakdown-edit-editing {
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: 80px;
+  padding: 2px 6px;
+  text-align: right;
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.inline-edit.pending-edit-editing {
+  font-size: 0.75rem;
+  font-weight: 700;
+  width: 80px;
+  padding: 2px 6px;
+  text-align: right;
+  box-shadow: none;
+  border-color: rgba(255, 159, 10, 0.4);
+  color: #ff9f0a;
+}
+
+.inline-edit.savings-amount-editing {
+  color: #ffd700;
+  font-size: 1.8rem;
+  font-weight: 900;
+  width: 100%;
+  max-width: 220px;
+  padding: 4px 12px;
+  display: block;
+  margin: 0 auto;
+}
+
+/* ── Config Panel ────────────────────────────────────────────────────── */
+
+.config-panel {
+  margin-bottom: 32px;
+}
+
+.config-toggle {
+  background: none;
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  color: rgba(255, 255, 255, 0.5);
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.config-toggle:hover {
+  border-color: rgba(138, 43, 226, 0.5);
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(138, 43, 226, 0.08);
+  box-shadow: 0 0 20px rgba(138, 43, 226, 0.1);
+}
+
+.config-body {
+  margin-top: 16px;
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.06) 0%, rgba(75, 0, 130, 0.04) 100%);
+  border: 1px solid rgba(138, 43, 226, 0.2);
+  border-radius: 16px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.config-body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #8a2be2, transparent);
+  opacity: 0.5;
+}
+
+.config-section {
+  margin-bottom: 20px;
+}
+
+.config-section:last-child {
+  margin-bottom: 0;
+}
+
+.config-section-title {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.config-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.config-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+}
+
+.config-value {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.config-value:hover {
+  border-color: rgba(138, 43, 226, 0.4);
+  background: rgba(138, 43, 226, 0.08);
+}
+
+.config-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(138, 43, 226, 0.5);
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+  width: 100px;
+  outline: none;
+}
+
+/* ── Tables (shared) ─────────────────────────────────────────────────── */
+
+.table-wrap,
+.daily-table-wrap {
+  margin-bottom: 40px;
+}
+
+.table-header-row,
+.daily-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ── Monthly Table ───────────────────────────────────────────────────── */
+
+.monthly-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.monthly-table th {
+  padding: 12px 14px;
+  text-align: right;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.monthly-table th:first-child {
+  text-align: left;
+}
+
+.monthly-table td {
+  padding: 12px 14px;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  white-space: nowrap;
+}
+
+.monthly-table td:first-child {
+  text-align: left;
+}
+
+.monthly-table tbody tr {
+  transition: background 0.15s;
+}
+
+.monthly-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.monthly-table tr.current-month {
+  background: rgba(0, 217, 255, 0.04);
+}
+
+.monthly-table tr.current-month td {
+  border-bottom-color: rgba(0, 217, 255, 0.1);
+}
+
+.month-cell {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.tag {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(0, 255, 136, 0.2));
+  color: #00d9ff;
+  font-size: 0.55rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.income-col { color: #00ff88 !important; }
+.expense-col { color: #ff9f0a !important; }
+.payment-col { color: #00d9ff !important; }
+.checking-col { font-weight: 800; }
+.net-col { font-weight: 800; }
+
+.income-val { color: #00ff88; }
+.count { color: rgba(255, 255, 255, 0.3); font-size: 0.7rem; }
+
+.zero { color: rgba(255, 255, 255, 0.08); }
+
+.pos-val { color: #00ff88; }
+.neg-val { color: #ff453a; text-shadow: 0 0 10px rgba(255, 69, 58, 0.3); }
+.debt-val { color: #ff9f0a; }
+
+/* ── Daily Table ─────────────────────────────────────────────────────── */
+
+.month-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.month-block {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  transition: border-color 0.3s;
+}
+
+.month-block:hover {
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.month-block-label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+}
+
+.month-range-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.range-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.5);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.range-btn:hover:not(:disabled) {
+  border-color: rgba(138, 43, 226, 0.4);
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(138, 43, 226, 0.08);
+}
+
+.range-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.range-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 700;
+  min-width: 32px;
+  text-align: center;
+}
+
+.daily-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+  table-layout: auto;
+}
+
+.daily-table th {
+  padding: 8px 6px;
+  text-align: right;
+  font-size: 0.55rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: rgba(255, 255, 255, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.daily-table th:first-child {
+  text-align: left;
+}
+
+.daily-table td {
+  padding: 6px 6px;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+
+.daily-table td:first-child {
+  text-align: left;
+}
+
+.daily-table tbody tr {
+  transition: background 0.1s;
+}
+
+.daily-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.row-today {
+  background: rgba(0, 217, 255, 0.06) !important;
+  border-left: 3px solid rgba(0, 217, 255, 0.5);
+}
+
+.row-today td {
+  border-bottom-color: rgba(0, 217, 255, 0.1) !important;
+}
+
+.row-payday {
+  background: rgba(0, 255, 136, 0.04);
+}
+
+.col-date {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-main {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.date-day {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.today-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.2), rgba(0, 255, 136, 0.2));
+  color: #00d9ff;
+  font-size: 0.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.val-income { color: #00ff88; font-weight: 700; }
+.val-spend { color: #ff9f0a; }
+.val-expense { color: #ff453a; }
+.val-payment { color: #00d9ff; }
+.val-debt { color: #ff9f0a; }
+.val-savings { color: #b388ff; }
+.val-savings-bal { color: #b388ff; font-weight: 700; }
+
+.extend-range-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+  padding: 8px 0;
+}
+
+.extend-range-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+  padding: 14px 32px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+}
+
+.extend-range-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+  border-style: solid;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.extend-range-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Editable cells ──────────────────────────────────────────────────── */
+
+.editable-val {
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.editable-val:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.editable-zero {
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.editable-zero:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.cell-edit-input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 217, 255, 0.5);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: inherit;
+  width: 75px;
+  text-align: right;
+  outline: none;
+  box-shadow: 0 0 10px rgba(0, 217, 255, 0.15);
+}
+
+.row-overridden {
+  background: rgba(138, 43, 226, 0.06) !important;
+  border-left: 3px solid rgba(138, 43, 226, 0.4);
+}
+
+.clear-row-btn {
+  background: rgba(255, 59, 48, 0.15);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  color: #ff3b30;
+  font-size: 0.55rem;
+  font-weight: 800;
+  width: 16px;
+  height: 16px;
+  line-height: 1;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 4px;
+  padding: 0;
+  vertical-align: middle;
+  transition: all 0.2s;
+}
+
+.clear-row-btn:hover {
+  background: rgba(255, 59, 48, 0.3);
+  border-color: rgba(255, 59, 48, 0.6);
+}
+
+.row-quiet {
+  opacity: 0.45;
+}
+
+.row-quiet:hover {
+  opacity: 1;
+}
+
+/* ── Month block header ──────────────────────────────────────────────── */
+
+/* ─��� Month due-date cards ─────────────────────────────────────────────── */
+
+.month-cards-wrap {
+  margin-bottom: 16px;
+}
+
+/* ── Month stats row ─────────────────────────────────────────────────── */
+
+.month-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.stat {
+  background: rgba(10, 10, 10, 0.8);
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.3);
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+
+.stat-delta {
+  font-size: 0.65rem;
+  font-weight: 800;
+  margin-top: 4px;
+  letter-spacing: 0.3px;
+}
+
+.stat-sub {
+  font-size: 0.6rem;
+  font-weight: 600;
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 0.3px;
+}
+
+.delta-good {
+  color: #00ff88;
+}
+
+.delta-bad {
+  color: #ff453a;
+}
+
+.month-cash-danger {
+  background: rgba(255, 69, 58, 0.08) !important;
+  border-color: rgba(255, 69, 58, 0.3) !important;
+  animation: pulse-danger 2s infinite;
+}
+
+@keyframes pulse-danger {
+  0%, 100% { border-color: rgba(255, 69, 58, 0.3); }
+  50% { border-color: rgba(255, 69, 58, 0.6); }
+}
+
+.month-cash-warning {
+  margin-left: auto;
+  background: rgba(255, 69, 58, 0.2);
+  color: #ff453a;
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+
+.month-card-passed {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.25);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.month-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+/* ── Month card (mc) ──────────────────────────────────────────────────── */
+
+.mc {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mc-partial {
+  border-style: dashed;
+}
+
+.mc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mc-name {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.mc-due {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.mc-owed {
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+}
+
+.mc-payments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mc-pay-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mc-pay-date {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  min-width: 42px;
+  flex-shrink: 0;
+}
+
+.mc-pay-remaining {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 159, 10, 0.6);
+  min-width: 65px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.mc-pay-zero {
+  color: rgba(0, 255, 136, 0.6);
+}
+
+.mc-total-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 6px;
+  margin-top: 2px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.mc-total-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.mc-total-value {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #00d9ff;
+}
+
+.mc-impact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+}
+
+.mc-impact-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.mc-impact-value {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.mc-paid-off {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #00ff88;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 12px rgba(0, 255, 136, 0.4);
+}
+
+.mc-statement {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+}
+
+.mc-statement-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.mc-statement-value {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.mc-detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mc-pending-val {
+  color: #ff9f0a !important;
+}
+
+.mc-pending-row .mc-statement-label {
+  color: rgba(255, 159, 10, 0.5);
+}
+
+.mc-stmt-line {
+  margin-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding-top: 6px;
+}
+
+.mc-pay-stmt-btn {
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  color: #00ff88;
+  font-size: 0.55rem;
+  font-weight: 800;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.mc-pay-stmt-btn:hover {
+  background: rgba(0, 255, 136, 0.15);
+  border-color: rgba(0, 255, 136, 0.5);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.15);
+}
+
+.mc-clear {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(0, 255, 136, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 4px;
+  text-align: center;
+}
+
+.mc-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #00d9ff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  font-family: inherit;
+  text-align: right;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  min-width: 0;
+}
+
+.mc-input:focus {
+  box-shadow: 0 0 16px rgba(0, 217, 255, 0.15);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.mc-remainder {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255, 159, 10, 0.7);
+  text-align: right;
+}
+
+.mc-passed {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(0, 255, 136, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 6px 0;
+}
+
+.mc-overdue {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #ff3b30;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 10px;
+  background: rgba(255, 59, 48, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.25);
+  border-radius: 6px;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.mc-history {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 8px 10px;
+  background: rgba(0, 255, 136, 0.06);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+  border-radius: 6px;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.mc-history-ok {
+  color: #00ff88;
+  letter-spacing: 0.3px;
+}
+
+.mc-done {
+  opacity: 0.65;
+}
+
+.mc-next-hint {
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.3);
+  text-align: center;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.mc-toggle-paid {
+  margin-top: 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+.mc-paid-amount-btn {
+  background: transparent;
+  border: none;
+  color: #00ff88;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0 4px;
+  border-bottom: 1px dashed rgba(0, 255, 136, 0.3);
+}
+
+.mc-paid-amount-btn:hover {
+  border-bottom-style: solid;
+}
+
+.mc-paid-amount-edit {
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  color: #00ff88;
+  font-weight: 800;
+  font-size: 0.85rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: 90px;
+  outline: none;
+  font-family: inherit;
+}
+
+.mc-toggle-paid:hover {
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.mc-pending-confirm {
+  background: rgba(255, 159, 10, 0.05);
+  border: 1px solid rgba(255, 159, 10, 0.4) !important;
+  animation: pulse-confirm 2.5s infinite;
+}
+
+@keyframes pulse-confirm {
+  0%, 100% { border-color: rgba(255, 159, 10, 0.4); }
+  50% { border-color: rgba(255, 159, 10, 0.7); }
+}
+
+.mc-confirm-prompt {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ff9f0a;
+  text-align: center;
+  padding: 14px 0 10px;
+  letter-spacing: 0.3px;
+}
+
+.mc-mark-paid {
+  border: none;
+  color: white;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  width: 100%;
+  transition: opacity 0.15s ease;
+}
+
+.mc-mark-paid:hover {
+  opacity: 0.85;
+}
+
+.mc-mark-paid-link {
+  margin-top: 10px;
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.35);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  text-transform: uppercase;
+  width: 100%;
+}
+
+.mc-mark-paid-link:hover {
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.3);
+  border-style: solid;
+}
+
+.mc-na {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.08);
+  text-align: center;
+  padding: 8px 0;
+}
+
+.month-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.expand-toggle {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+
+.expand-toggle:hover {
+  border-color: rgba(138, 43, 226, 0.3);
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(138, 43, 226, 0.08);
+}
+
+/* ── Clear overrides button ──────────────────────────────────────────── */
+
+.clear-overrides-btn {
+  background: rgba(255, 69, 58, 0.1);
+  border: 1px solid rgba(255, 69, 58, 0.3);
+  color: #ff453a;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+
+.clear-overrides-btn:hover {
+  background: rgba(255, 69, 58, 0.2);
+  border-color: rgba(255, 69, 58, 0.5);
+}
+
+.col-date-th {
+  text-align: left !important;
+}
+
+/* ── Chart ───────────────────────────────────────────────────────────── */
+
+.chart-section {
+  margin-bottom: 40px;
+}
+
+.chart-controls {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.chart-view-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.4);
+  padding: 5px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
+}
+
+.chart-view-btn:hover {
+  color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.chart-view-btn.active {
+  background: rgba(0, 217, 255, 0.1);
+  border-color: rgba(0, 217, 255, 0.35);
+  color: #00d9ff;
 }
 
 .chart-container {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
-  padding: 32px;
-  transition: all 0.3s ease;
+  padding: 24px;
+  height: 380px;
 }
 
-.chart-container:hover {
-  background: rgba(255, 255, 255, 0.03);
-  border-color: rgba(255, 255, 255, 0.12);
-}
+/* ── Responsive ──────────────────────────────────────────────────────── */
 
-.chart-container.full-width {
-  grid-column: 1 / -1;
-}
-
-.charts-section-compact {
-  padding: 0 48px 40px;
-  width: 100%;
-}
-
-.chart-container-small {
-  padding: 32px;
-  transition: all 0.3s ease;
-  cursor: default;
-}
-
-.chart-fullscreen-modal {
-  display: none;
-}
-
-.chart-fullscreen-modal::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(0, 255, 136, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(0, 217, 255, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 50% 50%, rgba(255, 69, 255, 0.08) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.chart-container-small h2 {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 24px;
-  font-weight: 700;
-}
-
-.chart-wrapper {
-  height: 500px;
-  width: 100%;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-.chart-container h2 {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 24px;
-}
-
-.transactions-section {
-  padding: 0 48px 80px;
-}
-
-.transactions-section > div {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 32px;
-}
-
-.transactions-section h2 {
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-bottom: 24px;
-}
-
-@media (min-width: 769px) {
-  .chart-wrapper {
-    height: 500px !important;
-  }
-}
+/* ── Tablet ──────────────────────────────────────────────────────────── */
 
 @media (max-width: 1024px) {
-  .charts-section {
-    grid-template-columns: 1fr;
-    padding: 0 24px 40px;
+  .dashboard {
+    padding: 0 20px 60px;
   }
-  
-  .transactions-section {
-    padding: 0 24px 60px;
+
+  .balance-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .month-cards {
+    gap: 10px;
   }
 }
 
-@media (max-width: 768px) {
-  .dashboard {
-    max-width: 100%;
-  }
-
-  .charts-section {
-    padding: 0 12px 12px;
-    gap: 12px;
-  }
-  
-  .chart-container {
-    padding: 12px;
-    border-radius: 12px;
-  }
-  
-  .chart-container h2 {
-    font-size: 0.65rem;
-    margin-bottom: 8px;
-  }
-
-  .transactions-section {
-    padding: 0 12px 24px;
-  }
-
-  .transactions-section > div {
-    padding: 12px;
-  }
-}
+/* ── Small tablet / large phone ─────────────────────────────────────── */
 
 @media (max-width: 768px) {
   .dashboard {
-    max-width: 100%;
-    display: block;
-    position: relative;
-    margin: 0 auto;
+    padding: 0 12px 40px;
   }
 
-  .charts-section-compact {
-    padding: 12px;
-    display: block;
-    position: relative;
+  .header {
+    padding: 12px 0;
     margin-bottom: 16px;
-    width: 100%;
-    box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    min-height: 550px;
   }
 
-  .chart-container-small {
-    padding: 0;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    margin: 0;
-    margin-bottom: 0;
-    pointer-events: auto !important;
-    width: 100%;
-    box-sizing: border-box;
-    overflow: visible;
-    flex-grow: 1;
-  }
-
-  .chart-container-small:active {
-    background: rgba(138, 43, 226, 0.08);
-    border-color: rgba(138, 43, 226, 0.5);
-  }
-
-  .chart-fullscreen-modal {
-    display: flex !important;
-  }
-
-  .chart-container-small h2 {
+  .header h1 {
     font-size: 0.65rem;
-    margin-bottom: 8px;
-    padding: 0 12px;
-    padding-top: 12px;
+    letter-spacing: 2px;
   }
 
-  .chart-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    position: relative;
-    overflow: visible !important;
-    padding: 0 12px 60px 12px !important;
-    margin: 0 !important;
-    height: auto !important;
-    min-height: auto;
-    width: 100%;
-  }
-
-  .chart-container-small h2::after {
-    content: ' 📱 (Tap to expand)';
-    font-size: 0.6rem;
-    opacity: 0.7;
-  }
-
-  .charts-section {
-    padding: 0 8px 8px;
-    grid-template-columns: 1fr;
+  .balance-summary {
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
-    display: block;
-    position: relative;
-    margin-top: 0;
-    margin-bottom: 16px;
-    width: 100%;
-    box-sizing: border-box;
   }
 
-  .chart-container {
+  .balance-card {
+    padding: 16px 12px;
+  }
+
+  .balance-amount,
+  .balance-amount-edit {
+    font-size: 1.2rem;
+  }
+
+  .card-bal-edit {
+    font-size: 1.2rem !important;
+  }
+
+  .config-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .daily-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Month stats: 2x2 grid instead of 4 across */
+  .month-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
     padding: 12px;
-    border-radius: 8px;
-    display: block;
-    position: relative;
-    margin-bottom: 0;
-    width: 100%;
-    box-sizing: border-box;
   }
 
-  .account-summary-new {
-    margin-bottom: 12px !important;
+  /* Month cards: stack vertically */
+  .month-cards {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
-  .transactions-section {
-    padding: 0 8px 12px;
-    display: block;
-    position: relative;
-    margin-top: 16px !important;
-    width: 100%;
-    box-sizing: border-box;
+  .mc {
+    padding: 14px;
   }
 
-  .transactions-section > div {
-    padding: 12px;
-    width: 100%;
-    box-sizing: border-box;
+  /* Table: horizontal scroll with smaller font */
+  .table-scroll {
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+
+  .daily-table {
+    font-size: 0.65rem;
+  }
+
+  .daily-table th,
+  .daily-table td {
+    padding: 6px 4px;
+  }
+
+  .col-date {
+    min-width: 70px;
+  }
+
+  /* Chart */
+  .chart-wrap {
+    height: 250px;
   }
 }
+
+/* ── Phone (iPhone) ─────────────────────────────────────────────────── */
 
 @media (max-width: 480px) {
   .dashboard {
-    max-width: 100%;
-    padding: 0;
-  }
-  
-  .charts-section {
-    padding: 0 4px 4px;
-    margin-bottom: 8px;
+    padding: 0 8px 24px;
   }
 
-  .charts-section-compact {
-    padding: 0 4px 4px;
-    margin-bottom: 8px;
+  .header {
+    padding: 10px 0;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
-  .chart-container {
-    padding: 8px;
-    margin-bottom: 4px;
+  .header h1 {
+    font-size: 0.6rem;
   }
 
-  .chart-container-small {
-    padding: 8px;
-    margin-bottom: 8px;
+  .clear-overrides-btn {
+    font-size: 0.55rem;
+    padding: 4px 10px;
   }
 
-  .chart-wrapper {
-    height: 150px !important;
+  /* Balance cards: single column */
+  .balance-summary {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
-  .chart-container-small {
-    min-height: auto !important;
-    margin-bottom: 8px !important;
-    padding-bottom: 12px !important;
+  .balance-card {
+    padding: 14px 12px;
+    border-radius: 12px;
   }
 
-  .transactions-section {
-    padding: 0 4px 8px;
-    margin-top: 8px !important;
+  .balance-amount,
+  .balance-amount-edit {
+    font-size: 1.1rem;
   }
 
-  .transactions-section > div {
-    padding: 8px;
+  .card-bal-edit {
+    font-size: 1.1rem !important;
+  }
+
+  .breakdown-label {
+    font-size: 0.55rem;
+  }
+
+  .breakdown-edit,
+  .breakdown-edit.pending-edit {
+    font-size: 0.7rem;
+  }
+
+  .balance-sub {
+    font-size: 0.6rem;
+  }
+
+  /* Config panel */
+  .config-toggle {
+    font-size: 0.6rem;
+    padding: 6px 14px;
+  }
+
+  .config-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .config-item {
+    min-width: unset;
+  }
+
+  /* Section titles */
+  .section-title {
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  /* Month stats: 2x2 */
+  .month-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .stat-label {
+    font-size: 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 0.8rem;
+  }
+
+  .stat-delta {
+    font-size: 0.5rem;
+  }
+
+  /* Month cards: full width stack */
+  .month-cards {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .mc {
+    padding: 12px;
+    border-radius: 10px;
+  }
+
+  .mc-name {
+    font-size: 0.65rem;
+  }
+
+  .mc-owed {
+    font-size: 1.1rem;
+  }
+
+  .mc-statement-label {
+    font-size: 0.55rem;
+  }
+
+  .mc-statement-value {
+    font-size: 0.7rem;
+  }
+
+  .mc-input {
+    font-size: 0.9rem;
+    padding: 6px 10px;
+  }
+
+  .mc-pay-date {
+    font-size: 0.6rem;
+  }
+
+  .mc-pay-remaining {
+    font-size: 0.6rem;
+  }
+
+  .mc-pay-stmt-btn {
+    font-size: 0.5rem;
+    padding: 2px 6px;
+  }
+
+  /* Month block */
+  .month-block {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .month-block-label {
+    font-size: 0.75rem;
+  }
+
+  .expand-toggle {
+    font-size: 0.5rem;
+    padding: 3px 8px;
+  }
+
+  /* Table */
+  .daily-table {
+    font-size: 0.6rem;
+  }
+
+  .daily-table th {
+    font-size: 0.5rem;
+    padding: 5px 3px;
+  }
+
+  .daily-table td {
+    padding: 5px 3px;
+  }
+
+  .date-main {
+    font-size: 0.6rem;
+  }
+
+  .date-day {
+    font-size: 0.45rem;
+  }
+
+  .today-badge {
+    font-size: 0.4rem;
+    padding: 1px 4px;
+  }
+
+  .cell-edit-input {
+    width: 50px;
+    font-size: 0.6rem;
+    padding: 2px 4px;
+  }
+
+  /* Chart */
+  .chart-wrap {
+    height: 200px;
+  }
+
+  .chart-month-btns {
+    gap: 4px;
+  }
+
+  .chart-month-btn {
+    font-size: 0.5rem;
+    padding: 3px 8px;
+  }
+
+  /* Range buttons */
+  .month-range-btns {
+    gap: 4px;
+  }
+
+  .range-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  .range-label {
+    font-size: 0.65rem;
+  }
+
+  /* Inline edit on phone */
+  /* Note: ALL inputs MUST be ≥16px on iOS Safari, otherwise the browser
+     zooms the entire page on focus. Using 16px (1rem) as the floor. */
+  .inline-edit,
+  .cell-edit-input,
+  .mc-input,
+  .mc-paid-amount-edit,
+  .config-input {
+    font-size: 16px !important;
+  }
+
+  .inline-edit {
+    width: 90px;
+  }
+
+  .cell-edit-input {
+    width: 70px;
+    padding: 4px 6px;
+  }
+
+  .inline-edit.balance-amount-edit-editing,
+  .inline-edit.savings-amount-editing {
+    font-size: 16px !important;
+    max-width: 160px;
+  }
+
+  /* Bigger tap targets — Apple recommends 44px minimum */
+  .range-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+
+  .clear-row-btn {
+    min-width: 28px;
+    min-height: 28px;
+    padding: 4px 8px;
+  }
+
+  /* Editable cells need a slightly bigger tap area than just text */
+  .editable-val,
+  .editable-zero {
+    display: inline-block;
+    min-height: 28px;
+    line-height: 28px;
+    padding: 0 4px;
+  }
+
+  .mc-pay-stmt-btn {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 0.55rem;
+  }
+
+  .inline-edit.card-bal-edit-editing {
+    font-size: 1rem;
+    max-width: 140px;
   }
 }

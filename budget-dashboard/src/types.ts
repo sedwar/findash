@@ -1,57 +1,58 @@
-export interface CashFlowRow {
-  date: string;
-  paycheck: number;
+export interface AppConfig {
+  // Savings (untouched)
+  savings: number;
+
+  // Current balances (from Excel)
+  checking: number;
+  bofaBalance: number;
+  chaseBalance: number;
+  bofa2Balance: number;
+
+  // Pending charges (from Excel — not yet on statement)
+  bofaPending: number;
+  chasePending: number;
+  bofa2Pending: number;
+
+  // Statement balances (from Excel — amount due this cycle)
+  bofaStatement: number;
+  chaseStatement: number;
+  bofa2Statement: number;
+
+  // Card payment amounts (user-configurable)
+  bofaPayment: number;
+  chasePayment: number;
+  bofa2Payment: number;
+
+  // Card due days
+  bofaDueDay: number;
+  chaseDueDay: number;
+  bofa2DueDay: number;
+
+  // Income
+  paycheckAmount: number;
+  paycheckOverride: number;
+  paycheckOverrideUntil: string; // ISO date, e.g. "2026-05-08"
+  payDayReference: string; // ISO date for biweekly calc anchor
+
+  // Expenses
+  rent: number;
+  rentDay: number;
+  weeklySpending: number;
+}
+
+export interface MonthlySnapshot {
+  label: string;
+  isCurrentMonth: boolean;
+  paychecks: number;
+  paycheckCount: number;
   spending: number;
   rent: number;
   bofaPayment: number;
-  bofa2Payment: number;
   chasePayment: number;
-  checking: number;
-  bofa: number;
-  chase: number;
-  bofa2: number;
-  notes: string;
-  chaseStatement: number;
-  total: number;
-  bofaBalance: number;
-  bofaBalance2: number;
-  checkingBalance: number;
-  totalBalance: number;
-  cash: number;
-}
-
-export interface FinancialData {
-  rows: CashFlowRow[];
-  summary: {
-    totalPaychecks: number;
-    totalSpending: number;
-    totalRent: number;
-    currentChecking: number;
-    currentBofA: number;
-    currentBofA2: number;
-    currentChase: number;
-    projectedBalance: number;
-    pendingChaseCharges: number;
-    pendingBofACharges: number;
-    pendingBofA2Charges: number;
-    chaseStatement: number;
-    bofaStatement: number;
-    bofa2Statement: number;
-    chaseNextStatement: number;
-    bofaNextStatement: number;
-    bofa2NextStatement: number;
-  };
-  upcomingPayments: {
-    date: string;
-    type: string;
-    amount: number;
-  }[];
-}
-
-export interface AccountBalance {
-  date: string;
-  checking: number;
-  bofa: number;
-  chase: number;
-  total: number;
+  bofa2Payment: number;
+  checkingEnd: number;
+  bofaEnd: number;
+  chaseEnd: number;
+  bofa2End: number;
+  netWorth: number;
 }
