@@ -16,13 +16,13 @@
     "weeklySpending": 200
   },
   "balances": {
-    "checking": 1507.14,
+    "checking": 1484.54,
     "bofaBalance": 16648.03,
     "chaseBalance": 249.05,
-    "bofa2Balance": 23874.74,
+    "bofa2Balance": 23871.74,
     "bofaPending": 0,
     "chasePending": 25,
-    "bofa2Pending": 10.5,
+    "bofa2Pending": 43.26,
     "bofaStatement": 10000,
     "chaseStatement": 249.05,
     "bofa2Statement": 23496
@@ -36,7 +36,7 @@
       "bofaPayment": 0
     },
     "2026-05-24": {
-      "bofa2Payment": 0,
+      "bofa2Payment": 5000,
       "bofaPayment": 0,
       "paycheck": 0
     },
@@ -45,26 +45,26 @@
       "paycheck": 5000
     },
     "2026-06-03": {
-      "bofaPayment": 448.03
+      "bofaPayment": 648.03
     },
     "2026-06-05": {
       "bofaPayment": 0
     },
     "2026-06-04": {
       "bofaPayment": 0,
-      "bofa2Payment": 3000
+      "bofa2Payment": 0
     },
     "2026-05-07": {
       "bofaPayment": 0,
       "chasePayment": 0,
-      "bofa2Payment": 2000
+      "bofa2Payment": 0
     },
     "2026-05-04": {
       "bofaPayment": 0,
       "bofa2Payment": 3000
     },
     "2026-06-24": {
-      "bofa2Payment": 2500,
+      "bofa2Payment": 5500,
       "rent": 0,
       "bofaPayment": 0
     },
@@ -84,17 +84,17 @@
       "bofa2Payment": 0
     },
     "2026-08-24": {
-      "bofa2Payment": 2000,
+      "bofa2Payment": 4000,
       "bofaPayment": 0
     },
     "2026-09-24": {
-      "bofa2Payment": 6785.24,
+      "bofa2Payment": 4815,
       "bofaPayment": 0
     },
     "2026-10-24": {
       "bofa2Payment": 800,
       "rent": 0,
-      "bofaPayment": 5500
+      "bofaPayment": 0
     },
     "2026-07-02": {
       "bofaPayment": 0
@@ -104,7 +104,7 @@
     },
     "2026-05-21": {
       "bofaPayment": 0,
-      "bofa2Payment": 3500
+      "bofa2Payment": 0
     },
     "2026-07-16": {
       "bofa2Payment": 0
@@ -126,14 +126,14 @@
     },
     "2026-07-03": {
       "bofaPayment": 500,
-      "bofa2Payment": 2500
+      "bofa2Payment": 0
     },
     "2026-08-03": {
       "bofaPayment": 1000,
-      "bofa2Payment": 1000
+      "bofa2Payment": 0
     },
     "2026-07-30": {
-      "bofa2Payment": 4000
+      "bofa2Payment": 8000
     },
     "2026-09-03": {
       "bofaPayment": 2500,
@@ -141,7 +141,7 @@
     },
     "2026-11-24": {
       "bofa2Payment": 1000,
-      "bofaPayment": 3500
+      "bofaPayment": 0
     },
     "2026-05-28": {
       "bofa2Payment": 0,
@@ -156,6 +156,15 @@
     "2026-04-30": {
       "spending": 0,
       "rent": 0
+    },
+    "2026-10-03": {
+      "bofaPayment": 500
+    },
+    "2026-11-03": {
+      "bofaPayment": 5000
+    },
+    "2026-12-03": {
+      "bofaPayment": 6500
     }
   },
   "paidCycles": {
